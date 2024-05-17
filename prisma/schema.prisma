@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ONLINE
+  OFFLINE
+  IDLE
+}
+
+model User {
+  userId                 String             @id @default(uuid())
+  username               String             @unique
+  email                  String             @unique
+  password               String
+  avatarUrl              String?
+  introduction           String?
+  status                 UserStatus?
+  lastOnlineTime         DateTime?
+  createdAt              DateTime           @default(now())
+  servers                Server[]
+  memberships            ServerMembership[]
+  sentFriendRequests     FriendRequest[]    @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[]    @relation("ReceivedFriendRequests")
+  botMessage             BotMessage[]
+  groupMessage           GroupMessage[]
+  sentMessage            DirectMessage[]    @relation("sentDirectMessage")
+  receivedMessage        DirectMessage[]    @relation("receivedDirectMessage")
+  botOfUser              BotOfUser[]
+  friends                Friend[]           @relation("UserFriends")
+  friendOfUsers          Friend[]           @relation("FriendOfUsers")
+}
+
+model Bot {
+  botId       String       @id @default(uuid())
+  botName     String
+  description String?
+  avatarUrl   String?
+  messages    BotMessage[]
+  botUsers    BotOfUser[]
+}
+
+model BotMessage {
+  messageId String   @id @default(uuid())
+  botId     String
+  senderId  String
+  bot       Bot      @relation(fields: [botId], references: [botId])
+  sender    User     @relation(fields: [senderId], references: [userId])
+  content   String   @db.Text
+  isDeleted Boolean  @default(false)
+  timeStamp DateTime @default(now())
+}
+
+model Server {
+  serverId    String             @id @default(uuid())
+  ownerId     String
+  serverName  String
+  imageUrl    String?
+  description String?
+  inviteCode  String?            @unique
+  isDeleted   Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  owner       User               @relation(fields: [ownerId], references: [userId])
+  channels    Channel[]
+  memberships ServerMembership[]
+}
+
+enum ChannelType {
+  TEXT
+  AUDIO
+  VIDEO
+}
+
+model Channel {
+  channelId     String         @id @default(uuid())
+  serverId      String
+  server        Server         @relation(fields: [serverId], references: [serverId])
+  channelName   String
+  channelType   ChannelType    @default(TEXT)
+  createdAt     DateTime       @default(now())
+  groupMessages GroupMessage[]
+}
+
+model GroupMessage {
+  messageId String   @id @default(uuid())
+  channelId String
+  senderId  String
+  channel   Channel  @relation(fields: [channelId], references: [channelId])
+  sender    User     @relation(fields: [senderId], references: [userId])
+  content   String   @db.Text
+  isDeleted Boolean  @default(false)
+  timeStamp DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DirectMessage {
+  messageId  String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  sender     User     @relation("sentDirectMessage", fields: [senderId], references: [userId], onDelete: Cascade)
+  receiver   User     @relation("receivedDirectMessage", fields: [receiverId], references: [userId], onDelete: Cascade)
+  content    String   @db.Text
+  isDeleted  Boolean  @default(false)
+  timeStamp  DateTime @default(now())
+}
+
+enum FriendRequestStatus {
+  PENDING
+  IGNORED
+}
+
+model FriendRequest {
+  requestId  String              @id @default(uuid())
+  senderId   String
+  receiverId String
+  sender     User                @relation("SentFriendRequests", fields: [senderId], references: [userId])
+  receiver   User                @relation("ReceivedFriendRequests", fields: [receiverId], references: [userId])
+  status     FriendRequestStatus @default(PENDING)
+}
+
+enum ServerRoleType {
+  ADMIN
+  MODERATOR
+  GUEST
+}
+
+model BotOfUser {
+  botOfUserId String @id @default(uuid())
+  botId       String
+  userId      String
+  bot         Bot    @relation(fields: [botId], references: [botId])
+  user        User   @relation(fields: [userId], references: [userId])
+}
+
+model ServerRole {
+  serverRoleId   String             @id @default(uuid())
+  serverRoletype ServerRoleType     @default(GUEST)
+  permissions    Permission[]
+  memberships    ServerMembership[]
+}
+
+enum PermissionType {
+  DELETE_MESSAGE
+  EDIT_MESSAGE
+  MUTE_MEMBER
+}
+
+model Permission {
+  permissionId   String          @id @default(uuid())
+  roleId         String
+  serverRole     ServerRole      @relation(fields: [roleId], references: [serverRoleId])
+  permissionType PermissionType?
+}
+
+model ServerMembership {
+  membershipId String     @id @default(uuid())
+  serverId     String
+  userId       String
+  serverRoleId String
+  server       Server     @relation(fields: [serverId], references: [serverId], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [userId])
+  role         ServerRole @relation(fields: [serverRoleId], references: [serverRoleId])
+  isMuted      Boolean    @default(false)
+}
+
+model Friend {
+  friendId     String @id @default(uuid())
+  userId       String
+  friendUserId String
+  user         User   @relation("UserFriends", fields: [userId], references: [userId])
+  friendUser   User   @relation("FriendOfUsers", fields: [friendUserId], references: [userId])
+}
