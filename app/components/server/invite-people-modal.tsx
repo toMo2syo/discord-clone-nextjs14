@@ -1,6 +1,6 @@
 'use client'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Dispatch, ReactNode, SetStateAction, useEffect, useState, useTransition } from "react";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ModalType } from "./server-menu";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, RefreshCcw } from "lucide-react";
@@ -68,7 +68,7 @@ export default function InvitePeopleModal({
                 <div className="mt-4">
                     <label htmlFor="invite-link" className="block uppercase text-xs font-semibold">server invite link</label>
                     <div className="flex gap-2 mt-2">
-                        <input type="text" disabled={loading} id="invite-link" defaultValue={inviteURl} className={clsx("bg-[#ebebeb] text-sm w-[90%] rounded-sm h-[30px] py-[5px] px-1 outline-none placeholder:text-sm", {
+                        <input type="text" disabled={loading} id="invite-link" readOnly value={inviteURl} className={clsx("bg-[#ebebeb] text-sm w-[90%] rounded-sm h-[30px] py-[5px] px-1 outline-none placeholder:text-sm", {
                             "opacity-50": loading
                         })} />
                         <Button

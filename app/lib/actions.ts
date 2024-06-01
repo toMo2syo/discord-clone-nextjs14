@@ -90,6 +90,63 @@ export async function createServer({ servername, imageUrl }: ServerformDataType)
     redirect(`/server/${serverWithChannels.serverId}/${serverWithChannels.channels[0].channelId}`)
 }
 
+//update server
+export async function updateServerById(id: string, { servername, imageUrl }: ServerformDataType) {
+    const profile = await currentProfile()
+    const validatedFields = CreateServerformSchema.safeParse({
+        servername,
+        imageUrl
+    })
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields.Failed to Create Server'
+        }
+    }
+    let server: Server | null = null
+    try {
+        server = await db.server.update({
+            where: {
+                serverId: id,
+                ownerId: profile.profileId
+            },
+            data: {
+                serverName: servername,
+                imageUrl
+            },
+            include: {
+                channels: true
+            }
+        })
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to update server,server id ${id}`)
+    }
+    const serverWithChannels = server as Server & { channels: Channel[] };
+    revalidatePath(`/server/${serverWithChannels.serverId}/${serverWithChannels.channels[0].channelId}`)
+    redirect(`/server/${serverWithChannels.serverId}/${serverWithChannels.channels[0].channelId}`)
+}
+
+//get server by its id
+export async function fetchServerById(id: string) {
+    try {
+        console.log('Fetching server from database with ID:', id)  // Debug log
+        const server = await db.server.findUnique({
+            where: {
+                serverId: id
+            }
+        })
+        console.log(server);
+
+        console.log('Server data:', server)  // Debug log
+        return server
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to fetch server,server id ${id}`)
+    }
+}
+
 //get the owner of a server
 export async function fetchProfileByServerId(id: string) {
     try {
@@ -258,6 +315,28 @@ export async function joinServer(inviteCode: string) {
     } catch (error) {
         console.error(error);
         throw new Error(`Failed to create member`)
+    }
+}
+
+//get the members (profiles) of a server along with their roles
+export async function fetchServerMembersById(id: string) {
+    try {
+        const membersWithRoles = await db.serverMembership.findMany({
+            where: {
+                serverId: id
+            },
+            include: {
+                profile: true,
+            }
+        })
+        const membersWithRolesFormatted = membersWithRoles.map(membership => ({
+            profile: membership.profile,
+            role: membership.serverRole
+        }));
+        return membersWithRolesFormatted
+    } catch (error) {
+        console.log(error);
+        throw new Error(`Fail to fetch members with server id ${id}`)
     }
 }
 

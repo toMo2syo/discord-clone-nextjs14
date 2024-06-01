@@ -5,19 +5,25 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
-import SidebarTooltip from "../ui/tooltip"
-import { Plus } from "lucide-react"
 import FileUpload from "./file-upload"
-import { MouseEvent, useState } from "react"
+import { Dispatch, MouseEvent, SetStateAction, useEffect, useState } from "react"
 import { ServerformDataType } from "@/app/lib/definition"
-import { createServer } from "@/app/lib/actions"
+import { fetchServerById, updateServerById } from "@/app/lib/actions"
 import clsx from "clsx"
+import { ModalType } from "./server-menu"
+import { usePathname } from "next/navigation"
 
-export default function CreateServerModal() {
+export default function CreateServerModal({
+    isOpen,
+    onClose
+}: {
+    isOpen: boolean,
+    onClose: Dispatch<SetStateAction<ModalType>>
+}) {
+    const pathname = usePathname()
+    const serverId = pathname.split('/')[2]
     const [loading, setLoading] = useState<Boolean>(false)
-    const [open, setOpen] = useState<boolean | undefined>(false)
     const [error, setError] = useState<{
         errors?: {
             servername?: string[],
@@ -29,19 +35,17 @@ export default function CreateServerModal() {
         servername: '',
         imageUrl: ''
     })
-    async function handleCreateServer(e: MouseEvent, server: ServerformDataType) {
+
+    async function handleUpdateServer(e: MouseEvent, server: ServerformDataType) {
         e.preventDefault()
         try {
             setLoading(true)
-            const error = await createServer(server)
+            const error = await updateServerById(serverId, server)
             if (error) {
                 setError(error)
             } else {
-                setOpen(false)
+                onClose('')
             }
-            // window.location.reload()
-            // window.location.assign('/server')
-            // router.replace(`server/${res?.serverId}`)
         } catch (error) {
             console.error(error);
 
@@ -49,15 +53,28 @@ export default function CreateServerModal() {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        async function fetchServer() {
+            try {
+                const server = await fetchServerById(serverId)
+                if (server) {
+                    setServer({
+                        servername: server.serverName || '',
+                        imageUrl: server.imageUrl || ''
+                    })
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        if (serverId) {
+            fetchServer()
+        }
+    }, [serverId])
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger>
-                <SidebarTooltip delayDuration={100} tip='Add a Server'>
-                    <div className="w-[48px] h-[48px] flex items-center group dark:bg-[#313338] hover:text-[white] justify-center rounded-full transition-colors duration-50 cursor-pointer hover:rounded-2xl bg-white hover:bg-[#23a559] dark:hover:bg-[#23a559]">
-                        <Plus width={24} height={24} className="text-[#23a559] group-hover:text-[white] transition-colors duration-50" />
-                    </div>
-                </SidebarTooltip>
-            </DialogTrigger>
+        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'SETTINGS' : '')}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="text-center">Customize Your Server</DialogTitle>
@@ -99,9 +116,9 @@ export default function CreateServerModal() {
                             })}>
                                 <div
                                     className="flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark"
-                                    onClick={e => handleCreateServer(e, server)}
+                                    onClick={e => handleUpdateServer(e, server)}
                                 >
-                                    <button className="outline-none">Create</button>
+                                    <button className="outline-none">Save</button>
                                 </div>
                             </div>
 

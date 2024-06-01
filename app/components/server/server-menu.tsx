@@ -4,8 +4,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { ChevronDown, LogOut, PlusCircle, Settings, Trash, UserPlus, Users } from "lucide-react";
 import InvitePeopleModal from "./invite-people-modal";
 import { useState } from "react";
+import ServerSettingModal from "./server-setting-modal";
+import ManageMemberModal from "./manage-member-modal";
 
-export type ModalType = 'INVITE' | ''
+export type ModalType = 'INVITE' | 'SETTINGS' | 'MANAGE' | ''
 export default function ServerMenu({
     profile,
     role
@@ -40,7 +42,7 @@ export default function ServerMenu({
                     {isAdmin && (
                         <>
                             <DropdownMenuLabel className="px-2 py-[6px] my-[2px] text-[#4e5058] dark:text-[#b5bac1] font-medium text-[14px] cursor-pointer hover:bg-[#505cdc] hover:text-white dark:hover:text-white hover:rounded-[2px] transition">
-                                <DropdownMenuItem className="flex justify-between items-center outline-none">
+                                <DropdownMenuItem onSelect={() => setModal('SETTINGS')} className="flex justify-between items-center outline-none">
                                     <span>Server Settings</span>
                                     <Settings width={18} height={18} />
                                 </DropdownMenuItem>
@@ -50,7 +52,7 @@ export default function ServerMenu({
                     {isAdmin && (
                         <>
                             <DropdownMenuLabel className="px-2 py-[6px] my-[2px] text-[#4e5058] dark:text-[#b5bac1] font-medium text-[14px] cursor-pointer hover:bg-[#505cdc] hover:text-white dark:hover:text-white hover:rounded-[2px] transition">
-                                <DropdownMenuItem className="flex justify-between items-center outline-none">
+                                <DropdownMenuItem onSelect={() => setModal('MANAGE')} className="flex justify-between items-center outline-none">
                                     <span>Manage Members</span>
                                     <Users width={18} height={18} />
                                 </DropdownMenuItem>
@@ -90,7 +92,9 @@ export default function ServerMenu({
                     )}
                 </DropdownMenuContent>
             </DropdownMenu>
-            <InvitePeopleModal isOpen={modal === 'INVITE'} onClose={setModal} />
+            {modal === 'INVITE' && <InvitePeopleModal isOpen={modal === 'INVITE'} onClose={setModal} />}
+            {modal === 'SETTINGS' && <ServerSettingModal isOpen={modal === 'SETTINGS'} onClose={setModal} />}
+            {modal === 'MANAGE' && <ManageMemberModal isOpen={modal === 'MANAGE'} onClose={setModal} />}
         </div>
     )
 }
