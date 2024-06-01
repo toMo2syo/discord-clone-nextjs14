@@ -7,53 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserStatus {
+enum ProfileStatus {
   ONLINE
   OFFLINE
   IDLE
 }
 
-model User {
-  userId                 String             @id @default(uuid())
-  username               String             @unique
-  email                  String             @unique
-  password               String
-  avatarUrl              String?
-  introduction           String?
-  status                 UserStatus?
-  lastOnlineTime         DateTime?
-  createdAt              DateTime           @default(now())
-  servers                Server[]
-  memberships            ServerMembership[]
-  sentFriendRequests     FriendRequest[]    @relation("SentFriendRequests")
-  receivedFriendRequests FriendRequest[]    @relation("ReceivedFriendRequests")
-  botMessage             BotMessage[]
-  groupMessage           GroupMessage[]
-  sentMessage            DirectMessage[]    @relation("sentDirectMessage")
-  receivedMessage        DirectMessage[]    @relation("receivedDirectMessage")
-  botOfUser              BotOfUser[]
-  friends                Friend[]           @relation("UserFriends")
-  friendOfUsers          Friend[]           @relation("FriendOfUsers")
-}
-
-model Bot {
-  botId       String       @id @default(uuid())
-  botName     String
-  description String?
-  avatarUrl   String?
-  messages    BotMessage[]
-  botUsers    BotOfUser[]
-}
-
-model BotMessage {
-  messageId String   @id @default(uuid())
-  botId     String
-  senderId  String
-  bot       Bot      @relation(fields: [botId], references: [botId])
-  sender    User     @relation(fields: [senderId], references: [userId])
-  content   String   @db.Text
-  isDeleted Boolean  @default(false)
-  timeStamp DateTime @default(now())
+model Profile {
+  profileId                String                     @id @default(uuid())
+  name                     String
+  email                    String                     @unique
+  avatarUrl                String?
+  introduction             String?
+  lastOnlineTime           DateTime?
+  createdAt                DateTime                   @default(now())
+  status                   ProfileStatus?
+  servers                  Server[]
+  memberships              ServerMembership[]
+  sentFriendRequests       FriendRequest[]            @relation("SentFriendRequests")
+  receivedFriendRequests   FriendRequest[]            @relation("ReceivedFriendRequests")
+  sentMessage              DirectMessage[]            @relation("sentDirectMessage")
+  receivedMessage          DirectMessage[]            @relation("receivedDirectMessage")
+  friends                  Friend[]                   @relation("ProfileFriends")
+  friendOfProfiles         Friend[]                   @relation("FriendOfProfiles")
+  ProfileMessageReadStatus ProfileMessageReadStatus[]
 }
 
 model Server {
@@ -62,12 +39,13 @@ model Server {
   serverName  String
   imageUrl    String?
   description String?
-  inviteCode  String?            @unique
-  isDeleted   Boolean            @default(false)
+  inviteCode  String             @unique @default(uuid())
   createdAt   DateTime           @default(now())
-  owner       User               @relation(fields: [ownerId], references: [userId])
+  owner       Profile            @relation(fields: [ownerId], references: [profileId], onDelete: Cascade)
   channels    Channel[]
   memberships ServerMembership[]
+
+  @@index([ownerId])
 }
 
 enum ChannelType {
@@ -79,48 +57,14 @@ enum ChannelType {
 model Channel {
   channelId     String         @id @default(uuid())
   serverId      String
-  server        Server         @relation(fields: [serverId], references: [serverId])
   channelName   String
-  channelType   ChannelType    @default(TEXT)
   createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  channelType   ChannelType    @default(TEXT)
+  server        Server         @relation(fields: [serverId], references: [serverId], onDelete: Cascade)
   groupMessages GroupMessage[]
-}
 
-model GroupMessage {
-  messageId String   @id @default(uuid())
-  channelId String
-  senderId  String
-  channel   Channel  @relation(fields: [channelId], references: [channelId])
-  sender    User     @relation(fields: [senderId], references: [userId])
-  content   String   @db.Text
-  isDeleted Boolean  @default(false)
-  timeStamp DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model DirectMessage {
-  messageId  String   @id @default(uuid())
-  senderId   String
-  receiverId String
-  sender     User     @relation("sentDirectMessage", fields: [senderId], references: [userId], onDelete: Cascade)
-  receiver   User     @relation("receivedDirectMessage", fields: [receiverId], references: [userId], onDelete: Cascade)
-  content    String   @db.Text
-  isDeleted  Boolean  @default(false)
-  timeStamp  DateTime @default(now())
-}
-
-enum FriendRequestStatus {
-  PENDING
-  IGNORED
-}
-
-model FriendRequest {
-  requestId  String              @id @default(uuid())
-  senderId   String
-  receiverId String
-  sender     User                @relation("SentFriendRequests", fields: [senderId], references: [userId])
-  receiver   User                @relation("ReceivedFriendRequests", fields: [receiverId], references: [userId])
-  status     FriendRequestStatus @default(PENDING)
+  @@index([serverId])
 }
 
 enum ServerRoleType {
@@ -129,49 +73,97 @@ enum ServerRoleType {
   GUEST
 }
 
-model BotOfUser {
-  botOfUserId String @id @default(uuid())
-  botId       String
-  userId      String
-  bot         Bot    @relation(fields: [botId], references: [botId])
-  user        User   @relation(fields: [userId], references: [userId])
-}
-
-model ServerRole {
-  serverRoleId   String             @id @default(uuid())
-  serverRoletype ServerRoleType     @default(GUEST)
-  permissions    Permission[]
-  memberships    ServerMembership[]
-}
-
-enum PermissionType {
-  DELETE_MESSAGE
-  EDIT_MESSAGE
-  MUTE_MEMBER
-}
-
-model Permission {
-  permissionId   String          @id @default(uuid())
-  roleId         String
-  serverRole     ServerRole      @relation(fields: [roleId], references: [serverRoleId])
-  permissionType PermissionType?
-}
-
 model ServerMembership {
-  membershipId String     @id @default(uuid())
+  membershipId String         @id @default(uuid())
   serverId     String
-  userId       String
-  serverRoleId String
-  server       Server     @relation(fields: [serverId], references: [serverId], onDelete: Cascade)
-  user         User       @relation(fields: [userId], references: [userId])
-  role         ServerRole @relation(fields: [serverRoleId], references: [serverRoleId])
-  isMuted      Boolean    @default(false)
+  profileId    String
+  serverRole   ServerRoleType
+  isMuted      Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  server       Server         @relation(fields: [serverId], references: [serverId], onDelete: Cascade)
+  profile      Profile        @relation(fields: [profileId], references: [profileId], onDelete: Cascade)
+  messages     GroupMessage[]
+
+  @@unique([serverId, profileId])
+  @@index([profileId])
+  @@index([serverId])
+}
+
+model GroupMessage {
+  messageId    String                     @id @default(uuid())
+  fileUrl      String?                    @db.Text
+  content      String                     @db.Text
+  isEddited    Boolean                    @default(false)
+  isDeleted    Boolean                    @default(false)
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+  channelId    String
+  membershipId String
+  channel      Channel                    @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  member       ServerMembership           @relation(fields: [membershipId], references: [membershipId], onDelete: Cascade)
+  readStatus   ProfileMessageReadStatus[]
+
+  @@index([channelId])
+  @@index([membershipId])
+}
+
+model DirectMessage {
+  messageId  String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  fileUrl    String?  @db.Text
+  isRead     Boolean  @default(false)
+  content    String   @db.Text
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  sender     Profile  @relation("sentDirectMessage", fields: [senderId], references: [profileId], onDelete: Cascade)
+  receiver   Profile  @relation("receivedDirectMessage", fields: [receiverId], references: [profileId], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId])
+}
+
+model ProfileMessageReadStatus {
+  id        String       @id @default(uuid())
+  messageId String
+  profileId String
+  isRead    Boolean      @default(false)
+  message   GroupMessage @relation(fields: [messageId], references: [messageId], onDelete: Cascade)
+  profile   Profile      @relation(fields: [profileId], references: [profileId], onDelete: Cascade)
+}
+
+enum FriendRequestStatus {
+  PENDING
+  IGNORED
+  ACCPETED
+}
+
+model FriendRequest {
+  requestId  String              @id @default(uuid())
+  senderId   String
+  receiverId String
+  createdAt  DateTime            @default(now())
+  sender     Profile             @relation("SentFriendRequests", fields: [senderId], references: [profileId], onDelete: Cascade)
+  receiver   Profile             @relation("ReceivedFriendRequests", fields: [receiverId], references: [profileId], onDelete: Cascade)
+  status     FriendRequestStatus @default(PENDING)
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
 }
 
 model Friend {
-  friendId     String @id @default(uuid())
-  userId       String
-  friendUserId String
-  user         User   @relation("UserFriends", fields: [userId], references: [userId])
-  friendUser   User   @relation("FriendOfUsers", fields: [friendUserId], references: [userId])
+  friendId           String   @id @default(uuid())
+  profileId          String
+  friendProfileId    String
+  isBlockedByProfile Boolean  @default(false)
+  isBlockedByFriend  Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  profile            Profile  @relation("ProfileFriends", fields: [profileId], references: [profileId], onDelete: Cascade)
+  friendProfile      Profile  @relation("FriendOfProfiles", fields: [friendProfileId], references: [profileId], onDelete: Cascade)
+
+  @@unique([profileId, friendId])
+  @@index([profileId])
+  @@index([friendProfileId])
 }
