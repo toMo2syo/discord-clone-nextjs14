@@ -1,8 +1,7 @@
 'use server'
 
-import { CreateServerformSchema, ServerformDataType } from './definition'
+import { CreateChannelFormSchema, CreateServerformSchema, ServerformDataType } from './definition'
 import { db } from "./db"
-import { initialProfile } from "./initial-profile"
 import { cache } from "react"
 import { currentProfile } from './current-profile'
 import { ServerRoleType, Server, Channel } from '@prisma/client'
@@ -445,9 +444,149 @@ export async function removeMemberFromServer(serverId: string, memberId: string)
     }
 }
 
-//create channel
-export async function createChannel() {
+//leave server
+export async function leaveServer(serverId: string) {
+    console.log('called');
 
+    try {
+        const profile = await currentProfile();
+
+        // Check if the user is the admin of the server
+        const membership = await db.serverMembership.findUnique({
+            where: {
+                serverId_profileId: {
+                    serverId: serverId,
+                    profileId: profile.profileId
+                }
+            },
+            include: {
+                server: true
+            }
+        });
+        console.log(membership);
+
+        if (!membership) {
+            throw new Error('Membership not found');
+        }
+
+        if (membership.serverRole === ServerRoleType.ADMIN) {
+            throw new Error('Admins cannot leave the server');
+        }
+
+        //Delete the ServerMembership record
+        await db.serverMembership.delete({
+            where: {
+                serverId_profileId: {
+                    serverId: serverId,
+                    profileId: profile.profileId
+                }
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to leave server: ${error}`);
+    }
+    revalidatePath('/server')
+    redirect('/server')
+}
+
+//delete server
+export async function deleteServer(serverId: string) {
+    try {
+        const profile = await currentProfile();
+
+        //Check if the user is the admin of the server
+        const server = await db.server.findUnique({
+            where: {
+                serverId: serverId,
+            },
+            include: {
+                owner: true,
+            },
+        });
+
+        if (!server) {
+            throw new Error('Server not found');
+        }
+
+        if (server.ownerId !== profile.profileId) {
+            throw new Error('Only the admin can delete the server');
+        }
+
+        //Delete the server
+        await db.server.delete({
+            where: {
+                serverId: serverId,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to delete server: ${error}`);
+    }
+    revalidatePath('/server')
+    redirect('/server')
+}
+
+//create channel
+export type CreateChannelState = {
+    errors?: {
+        name?: string[];
+        type?: string[]
+    };
+    message?: string | null
+} | undefined
+export async function createChannel(serverId: string, prevState: CreateChannelState, formData: FormData) {
+    const rowFormData = {
+        name: formData.get('channelName'),
+        type: formData.get('type')
+    }
+    const safeFormData = CreateChannelFormSchema.safeParse(rowFormData)
+    if (!safeFormData.success) {
+        return {
+            errors: safeFormData.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Create Channel'
+        }
+    }
+    if (!serverId) {
+        throw new Error('Missing serverId')
+    }
+    let newChannel: null | Channel = null
+    // await new Promise(resolve => setTimeout(resolve, 2000))
+    try {
+        const profile = await currentProfile()
+        //Check if the user has the necessary role
+        const membership = await db.serverMembership.findFirst({
+            where: {
+                serverId: serverId,
+                profileId: profile.profileId,
+                serverRole: {
+                    in: [ServerRoleType.ADMIN, ServerRoleType.MODERATOR]
+                }
+            }
+        });
+
+        if (!membership) {
+            throw new Error('Permission Denied: Only admins and moderators can create channels.');
+        }
+
+        //Create the channel
+        newChannel = await db.channel.create({
+            data: {
+                channelName: safeFormData.data.name,
+                channelType: safeFormData.data.type,
+                server: {
+                    connect: { serverId: serverId }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to create channel: ${error}`);
+    }
+    console.log(newChannel.channelId)
+    revalidatePath(`/server/${serverId}/${newChannel.channelId}`)
+    redirect(`/server/${serverId}/${newChannel.channelId}`)
 }
 
 //get channel by its id

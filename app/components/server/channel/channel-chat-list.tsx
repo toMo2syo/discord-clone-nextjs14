@@ -9,10 +9,15 @@ import { Plus } from "lucide-react";
 import ChannelList from "./channel";
 import { Arrow, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip";
 import { Channel, ChannelType } from "@prisma/client";
+import { useState } from "react";
+import { ModalType } from "../server-menu";
+import CreateChannelModal from "./create-channel-modal";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ChannelListWrapper({ channels }: { channels: Channel[] | undefined }) {
+    const [modal, setModal] = useState<ModalType>('')
     return (
-        <div>
+        <ScrollArea className="h-[calc(100vh-48px)]">
             <div className="pr-[10px]">
                 <Accordion type="multiple" defaultValue={['TEXT']}>
                     {Object.values(ChannelType)
@@ -27,7 +32,7 @@ export default function ChannelListWrapper({ channels }: { channels: Channel[] |
                                 <TooltipProvider delayDuration={100}>
                                     <Tooltip>
                                         <TooltipTrigger className="w-[20px] h-[20px] absolute top-4 right-0 cursor-pointer">
-                                            <div onClick={() => console.log('clicked')} >
+                                            <div onClick={() => setModal('CREATE')} >
                                                 <Plus width={18} height={18} strokeWidth={2} color="#5C5E66" className=" z-20" />
                                             </div>
                                         </TooltipTrigger>
@@ -53,6 +58,7 @@ export default function ChannelListWrapper({ channels }: { channels: Channel[] |
                         ))}
                 </Accordion>
             </div>
-        </div>
+            {modal === 'CREATE' && <CreateChannelModal isOpen={modal === 'CREATE'} onClose={setModal} />}
+        </ScrollArea>
     )
 }

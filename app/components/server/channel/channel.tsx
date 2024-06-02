@@ -9,8 +9,8 @@ export default function ChannelList({ channel }: { channel: Channel }) {
     const pathname = usePathname()
     return (
         <Link href={`/server/${channel.serverId}/${channel.channelId}`} className="block mb-1">
-            <div className={clsx("flex items-center gap-1 h-[34px] rounded-sm cursor-pointer hover:bg-gray-hover dark:hover:bg-[#404249] group", {
-                "bg-gray-hover dark:bg-[#404249]": pathname.includes(channel.channelId),
+            <div className={clsx("flex items-center gap-1 h-[34px] rounded-sm cursor-pointer hover:bg-[#d7d9dc] dark:hover:bg-[#404249] group", {
+                "bg-[#d7d9dc] dark:bg-[#404249]": pathname.includes(channel.channelId),
                 "": !pathname.includes(channel.channelId)
             })}>
                 {channel.channelType === ChannelType.TEXT && <Hash width={20} height={20} color="#6d6f78" className="group-hover:text-text-bold" />}

@@ -11,9 +11,6 @@ export default async function page({ params, children }: { params: { serverId: s
         fetchChannels(params.serverId),
         fetchRoleByServerId(params.serverId)
     ])
-    console.log(profile);
-    console.log(channels);
-    console.log(role);
     if (!profile || !channels || !role) {
         return notFound()
     }
