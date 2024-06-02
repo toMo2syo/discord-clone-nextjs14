@@ -74,7 +74,7 @@ export default function CreateServerModal({
     }, [serverId])
 
     return (
-        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'SETTINGS' : '')}>
+        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'SETTING' : '')}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="text-center">Customize Your Server</DialogTitle>
@@ -101,7 +101,7 @@ export default function CreateServerModal({
                                 <input type="text" value={server.servername} onChange={(e) => setServer({
                                     ...server,
                                     servername: e.target.value
-                                })} placeholder="Enter server name" required min={3} name="servername" className="bg-[#ebebeb] w-full rounded-sm h-[40px] py-[10px] px-2 outline-none placeholder:text-sm" />
+                                })} placeholder="Enter server name" required min={3} name="servername" className="bg-[#ebebeb] dark:bg-[#1e1f22] w-full rounded-sm h-[40px] py-[10px] px-2 outline-none placeholder:text-sm" />
                             </div>
                             <div className="w-full">
                                 {error?.errors?.servername &&

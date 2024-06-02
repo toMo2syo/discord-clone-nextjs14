@@ -7,8 +7,8 @@ import { cache } from "react"
 import { currentProfile } from './current-profile'
 import { ServerRoleType, Server, Channel } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid';
+import { redirect } from 'next/navigation'
 
 
 //get all intial servers when a user log in
@@ -333,6 +333,19 @@ export async function fetchServerMembersById(id: string) {
             profile: membership.profile,
             role: membership.serverRole
         }));
+
+        // Define the priority for each role
+        const rolePriority = {
+            ADMIN: 1,
+            MODERATOR: 2,
+            GUEST: 3,
+        };
+
+        // Sort the members based on role priority
+        membersWithRolesFormatted.sort((a, b) => {
+            return rolePriority[a.role] - rolePriority[b.role];
+        });
+
         return membersWithRolesFormatted
     } catch (error) {
         console.log(error);
@@ -340,6 +353,102 @@ export async function fetchServerMembersById(id: string) {
     }
 }
 
+//update role
+export async function updateServerRole(serverId: string, memberId: string, role: ServerRoleType) {
+    const profile = await currentProfile()
+    // Get the role of the current user
+    const currentUserMembership = await db.serverMembership.findUnique({
+        where: {
+            serverId_profileId: {
+                serverId: serverId,
+                profileId: profile.profileId,
+            }
+        }
+    });
+
+    if (!currentUserMembership || currentUserMembership.serverRole !== 'ADMIN') {
+        throw new Error('Permission Denied: Only admins can change role');
+    }
+
+    if (memberId === profile.profileId) {
+        throw new Error('You can not change the role of your own');
+    }
+
+    try {
+        await db.serverMembership.update({
+            where: {
+                serverId_profileId: {
+                    serverId: serverId,
+                    profileId: memberId,
+                }
+            },
+            data: {
+                serverRole: role
+            }
+        })
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to update server role for member ${memberId} in server ${serverId}`);
+    }
+}
+
+//kick member
+export async function removeMemberFromServer(serverId: string, memberId: string) {
+    try {
+        const profile = await currentProfile()
+        // Get the role of the current user
+        const currentUserMembership = await db.serverMembership.findUnique({
+            where: {
+                serverId_profileId: {
+                    serverId: serverId,
+                    profileId: profile.profileId,
+                }
+            }
+        });
+
+        if (!currentUserMembership || currentUserMembership.serverRole !== 'ADMIN') {
+            throw new Error('Permission Denied: Only admins can kick members.');
+        }
+
+        // Get the role of the member to be kicked
+        const memberToKick = await db.serverMembership.findUnique({
+            where: {
+                serverId_profileId: {
+                    serverId: serverId,
+                    profileId: memberId,
+                }
+            }
+        });
+
+        if (!memberToKick) {
+            throw new Error('Member not found in the server.');
+        }
+
+        if (memberToKick.serverRole === 'ADMIN') {
+            throw new Error('Cannot kick an admin.');
+        }
+
+        // Proceed to remove the member
+        await db.serverMembership.delete({
+            where: {
+                serverId_profileId: {
+                    serverId: serverId,
+                    profileId: memberId,
+                }
+            }
+        });
+
+        return { message: 'Member kicked successfully.' };
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to kick member: ${error}`);
+    }
+}
+
+//create channel
+export async function createChannel() {
+
+}
 
 //get channel by its id
 export async function fetchChannelById(id: string) {

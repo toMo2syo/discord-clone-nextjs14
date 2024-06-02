@@ -1,6 +1,5 @@
 'use client'
-import { Channel as ChannelProps, ChannelType } from "@/app/lib/definition";
-import { Channel } from "@prisma/client";
+import { Channel, ChannelType } from "@prisma/client";
 import clsx from "clsx";
 import { Hash, Video, Volume2 } from "lucide-react";
 import Link from "next/link";

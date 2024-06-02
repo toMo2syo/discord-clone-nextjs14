@@ -27,9 +27,9 @@ export default function Avatar({
     return (
         <div className={avatarClass} style={{ width: size, height: size }} {...props}>
             {src ? (
-                <Image src={src} alt={alt} className="w-full h-full rounded-full object-cover" />
+                <Image src={src} alt={alt} width={size} height={size} className="w-full h-full rounded-full object-cover" />
             ) : (
-                <span>{name}</span>
+                <span className="">{name}</span>
             )}
         </div>
     )

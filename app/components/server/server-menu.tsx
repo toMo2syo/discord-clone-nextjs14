@@ -6,8 +6,9 @@ import InvitePeopleModal from "./invite-people-modal";
 import { useState } from "react";
 import ServerSettingModal from "./server-setting-modal";
 import ManageMemberModal from "./manage-member-modal";
+import CreateChannelModal from "./channel/create-channel-modal";
 
-export type ModalType = 'INVITE' | 'SETTINGS' | 'MANAGE' | ''
+export type ModalType = 'INVITE' | 'SETTING' | 'MANAGE' | 'CREATE' | ''
 export default function ServerMenu({
     profile,
     role
@@ -42,7 +43,7 @@ export default function ServerMenu({
                     {isAdmin && (
                         <>
                             <DropdownMenuLabel className="px-2 py-[6px] my-[2px] text-[#4e5058] dark:text-[#b5bac1] font-medium text-[14px] cursor-pointer hover:bg-[#505cdc] hover:text-white dark:hover:text-white hover:rounded-[2px] transition">
-                                <DropdownMenuItem onSelect={() => setModal('SETTINGS')} className="flex justify-between items-center outline-none">
+                                <DropdownMenuItem onSelect={() => setModal('SETTING')} className="flex justify-between items-center outline-none">
                                     <span>Server Settings</span>
                                     <Settings width={18} height={18} />
                                 </DropdownMenuItem>
@@ -62,7 +63,7 @@ export default function ServerMenu({
                     {isModerator && (
                         <>
                             <DropdownMenuLabel className="px-2 py-[6px] my-[2px] text-[#4e5058] dark:text-[#b5bac1] font-medium text-[14px] cursor-pointer hover:bg-[#505cdc] hover:text-white dark:hover:text-white hover:rounded-[2px] transition">
-                                <DropdownMenuItem className="flex justify-between items-center outline-none">
+                                <DropdownMenuItem onSelect={() => setModal('CREATE')} className="flex justify-between items-center outline-none">
                                     <span>Create Channels</span>
                                     <PlusCircle width={18} height={18} />
                                 </DropdownMenuItem>
@@ -93,8 +94,9 @@ export default function ServerMenu({
                 </DropdownMenuContent>
             </DropdownMenu>
             {modal === 'INVITE' && <InvitePeopleModal isOpen={modal === 'INVITE'} onClose={setModal} />}
-            {modal === 'SETTINGS' && <ServerSettingModal isOpen={modal === 'SETTINGS'} onClose={setModal} />}
+            {modal === 'SETTING' && <ServerSettingModal isOpen={modal === 'SETTING'} onClose={setModal} />}
             {modal === 'MANAGE' && <ManageMemberModal isOpen={modal === 'MANAGE'} onClose={setModal} />}
+            {modal === 'CREATE' && <CreateChannelModal isOpen={modal === 'CREATE'} onClose={setModal} />}
         </div>
     )
 }

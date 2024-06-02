@@ -6,31 +6,6 @@ export const CreateServerformSchema = z.object({
 })
 export type ServerformDataType = z.infer<typeof CreateServerformSchema>
 
-enum UserStatus {
-    'ONLINE',
-    'OFFLINE',
-    'IDLE'
-}
-export enum ChannelType {
-    TEXT = 'TEXT',
-    AUDIO = 'AUDIO',
-    VIDEO = 'VIDEO'
-}
+export const CreateChannelFormSchema = z.object({
 
-export type Channel = {
-    channelId: string
-    serverId: string
-    channelName: string
-    channelType: ChannelType
-}
-
-export type User = {
-    userId: String
-    username: String
-    email: String
-    password: String
-    avatarUrl?: String
-    introduction?: String
-    status?: UserStatus
-    lastOnlineTime?: Date
-};
+})
