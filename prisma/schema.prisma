@@ -26,8 +26,10 @@ model Profile {
   memberships              ServerMembership[]
   sentFriendRequests       FriendRequest[]            @relation("SentFriendRequests")
   receivedFriendRequests   FriendRequest[]            @relation("ReceivedFriendRequests")
-  sentMessage              DirectMessage[]            @relation("sentDirectMessage")
-  receivedMessage          DirectMessage[]            @relation("receivedDirectMessage")
+  sentMessages             DirectMessage[]            @relation("SentMessages")
+  receivedMessages         DirectMessage[]            @relation("ReceivedMessages")
+  convsersationsInitiated  Conversation[]             @relation("profile1")
+  convsersationsRecieved   Conversation[]             @relation("profile2")
   friends                  Friend[]                   @relation("ProfileFriends")
   friendOfProfiles         Friend[]                   @relation("FriendOfProfiles")
   ProfileMessageReadStatus ProfileMessageReadStatus[]
@@ -94,7 +96,7 @@ model GroupMessage {
   messageId    String                     @id @default(uuid())
   fileUrl      String?                    @db.Text
   content      String                     @db.Text
-  isEddited    Boolean                    @default(false)
+  isEdited     Boolean                    @default(false)
   isDeleted    Boolean                    @default(false)
   createdAt    DateTime                   @default(now())
   updatedAt    DateTime                   @updatedAt
@@ -108,20 +110,39 @@ model GroupMessage {
   @@index([membershipId])
 }
 
-model DirectMessage {
-  messageId  String   @id @default(uuid())
-  senderId   String
-  receiverId String
-  fileUrl    String?  @db.Text
-  isRead     Boolean  @default(false)
-  content    String   @db.Text
-  isDeleted  Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  sender     Profile  @relation("sentDirectMessage", fields: [senderId], references: [profileId], onDelete: Cascade)
-  receiver   Profile  @relation("receivedDirectMessage", fields: [receiverId], references: [profileId], onDelete: Cascade)
+model Conversation {
+  conversationId String          @id @default(uuid())
+  profileId1     String
+  profileId2     String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  messages       DirectMessage[]
 
-  @@unique([senderId, receiverId])
+  profile1 Profile @relation("profile1", fields: [profileId1], references: [profileId], onDelete: Cascade)
+  profile2 Profile @relation("profile2", fields: [profileId2], references: [profileId], onDelete: Cascade)
+
+  @@unique([profileId1, profileId2])
+  @@index([profileId1])
+  @@index([profileId2])
+}
+
+model DirectMessage {
+  messageId      String       @id @default(uuid())
+  conversationId String
+  senderId       String
+  receiverId     String
+  fileUrl        String?      @db.Text
+  isRead         Boolean      @default(false)
+  content        String       @db.Text
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  sender         Profile      @relation("SentMessages", fields: [senderId], references: [profileId], onDelete: Cascade)
+  receiver       Profile      @relation("ReceivedMessages", fields: [receiverId], references: [profileId], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [conversationId], onDelete: Cascade)
+
+  @@index([senderId])
   @@index([receiverId])
+  @@index([conversationId])
 }
 
 model ProfileMessageReadStatus {
@@ -136,7 +157,7 @@ model ProfileMessageReadStatus {
 enum FriendRequestStatus {
   PENDING
   IGNORED
-  ACCPETED
+  ACCEPTED
 }
 
 model FriendRequest {
@@ -148,7 +169,6 @@ model FriendRequest {
   receiver   Profile             @relation("ReceivedFriendRequests", fields: [receiverId], references: [profileId], onDelete: Cascade)
   status     FriendRequestStatus @default(PENDING)
 
-  @@unique([senderId, receiverId])
   @@index([senderId])
   @@index([receiverId])
 }
@@ -163,7 +183,6 @@ model Friend {
   profile            Profile  @relation("ProfileFriends", fields: [profileId], references: [profileId], onDelete: Cascade)
   friendProfile      Profile  @relation("FriendOfProfiles", fields: [friendProfileId], references: [profileId], onDelete: Cascade)
 
-  @@unique([profileId, friendId])
   @@index([profileId])
   @@index([friendProfileId])
 }
