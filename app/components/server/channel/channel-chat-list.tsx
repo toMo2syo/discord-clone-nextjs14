@@ -48,7 +48,7 @@ export default function ChannelListWrapper({ channels }: { channels: Channel[] |
                                         <div>
                                             {channels?.filter(channel => {
                                                 return channel.channelType === ChannelType[type]
-                                            }).map(channel => ( // Compare enum values
+                                            }).map(channel => (
                                                 <ChannelList key={channel.channelId} channel={channel} />
                                             ))}
                                         </div>

@@ -1,41 +1,49 @@
 'use client'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Dispatch, SetStateAction } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ModalType } from "../server-menu";
 import clsx from "clsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ChannelType } from "@prisma/client";
-import { CreateChannelState, createChannel } from "@/app/lib/actions";
+import { Channel, ChannelType } from "@prisma/client";
+import { CreateChannelState, createChannel, updateChannel } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
+import { ChannelModalType } from "./channel";
 
-export default function CreateChannelModal({
+export default function EditChannelModal({
+    channel,
     isOpen,
     onClose
 }: {
+    channel: Channel,
     isOpen: boolean,
-    onClose: Dispatch<SetStateAction<ModalType>>
+    onClose: Dispatch<SetStateAction<ChannelModalType>>
 }) {
     const pathname = usePathname()
     const serverId = pathname.split('/')[2]
+    const channelId = pathname.split('/')[3]
+    const router = useRouter()
+    if (!serverId || !channelId) {
+        router.replace('/server')
+    }
     const initialState: CreateChannelState = { errors: {}, message: null }
-    const createChannelWithId = createChannel.bind(null, serverId)
-    const [error, dispatch] = useFormState(createChannelWithId, initialState)
+    const updateChannelWithId = updateChannel.bind(null, serverId, channelId)
+    const [error, dispatch] = useFormState(updateChannelWithId, initialState)
     return (
-        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'CREATE' : '')}>
+        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'EDIT' : '')}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="text-center">Create Channel</DialogTitle>
+                    <DialogTitle className="text-center">Edit Channel</DialogTitle>
                 </DialogHeader>
                 <form action={dispatch}>
                     <div className="px-2">
                         <div className="flex flex-col gap-3 items-center">
                             <div className="w-full">
                                 <label htmlFor="type" className="mb-2 uppercase text-xs font-semibold">Channel Type</label>
-                                <RadioGroup name="type" defaultValue="TEXT" className="flex gap-8 mt-2">
+                                <RadioGroup name="type" defaultValue={channel.channelType} className="flex gap-8 mt-2">
                                     {Object.values(ChannelType).map(type => (
                                         <div key={type} className="flex items-center space-x-2">
-                                            <RadioGroupItem value={type} id={type} className="text-main dark:text-white" />
+                                            <RadioGroupItem value={type} id={type} disabled={type !== channel.channelType} className="text-main dark:text-white" />
                                             <label htmlFor={type}>{type}</label>
                                         </div>
                                     ))}
@@ -51,7 +59,7 @@ export default function CreateChannelModal({
                             </div>
                             <div className="w-full">
                                 <label htmlFor="channelName" className="block mb-2 uppercase text-xs font-semibold">Channel name</label>
-                                <input type="text" placeholder="Enter channel name" min={3} name="channelName" className="bg-[#ebebeb] dark:bg-[#1e1f22] w-full rounded-sm h-[40px] py-[10px] px-2 outline-none placeholder:text-sm" />
+                                <input type="text" placeholder="Enter channel name" defaultValue={channel.channelName} min={3} name="channelName" className="bg-[#ebebeb] dark:bg-[#1e1f22] w-full rounded-sm h-[40px] py-[10px] px-2 outline-none placeholder:text-sm" />
                             </div>
                             <div className="w-full">
                                 {error?.errors?.name &&
@@ -80,18 +88,20 @@ export default function CreateChannelModal({
 function Submit({
     onClose
 }: {
-    onClose: Dispatch<SetStateAction<ModalType>>
+    onClose: Dispatch<SetStateAction<ChannelModalType>>
 }) {
     const { pending, data, method, action } = useFormStatus();
     return (
-        <button
-            className={
-                clsx("flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] outline-none rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark", {
-                    "opacity-50": pending
-                })
-            }
-            type="submit"
-            disabled={pending}
-        >Create</button>
+        <div>
+            <button
+                className={
+                    clsx("flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] outline-none rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark", {
+                        "opacity-50": pending
+                    })
+                }
+                type="submit"
+                disabled={pending}
+            >Save</button>
+        </div>
     )
 }

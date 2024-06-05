@@ -1,32 +1,37 @@
 'use client'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Dispatch, SetStateAction } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
-import { deleteServer } from "@/app/lib/actions";
+import { deleteChannel } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
-import { ModalType } from "./server-menu";
+import { ChannelModalType } from "./channel";
 
-export default function DeleteServerModal({
+export default function DeleteChannelModal({
     isOpen,
     onClose
 }: {
     isOpen: boolean,
-    onClose: Dispatch<SetStateAction<ModalType>>
+    onClose: Dispatch<SetStateAction<ChannelModalType>>
 }) {
     const pathname = usePathname()
     const serverId = pathname.split('/')[2]
-    const deleteServerWithId = deleteServer.bind(null, serverId)
-    const [error, dispatch] = useFormState(deleteServerWithId, undefined)
+    const channelId = pathname.split('/')[3]
+    const router = useRouter()
+    if (!serverId || !channelId) {
+        router.replace('/server')
+    }
+    const deleteChannelWithId = deleteChannel.bind(null, serverId, channelId)
+    const [error, dispatch] = useFormState(deleteChannelWithId, undefined)
     return (
         <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'DELETE' : '')}>
             <DialogContent className="gap-0 px-0 pb-0 dark:bg-[#2b2d31]">
                 <DialogHeader>
-                    <DialogTitle className="text-center">Delete Server</DialogTitle>
+                    <DialogTitle className="text-center">Delete Channel</DialogTitle>
                 </DialogHeader>
                 <DialogDescription className="text-center py-4">
                     <p>Are you sure you want to delete?</p>
-                    <p>Your server will be permanently deleted</p>
+                    <p>Your channel will be permanently deleted</p>
                 </DialogDescription>
                 <DialogFooter className="bg-[#f2f3f5] w-full p-2 dark:bg-[#2b2d31]">
                     <form action={dispatch}>

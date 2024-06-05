@@ -146,7 +146,7 @@ export async function fetchServerById(id: string) {
     }
 }
 
-//get the owner of a server
+//Fetch profile by server ID
 export async function fetchProfileByServerId(id: string) {
     try {
         const profile = await currentProfile()
@@ -173,6 +173,42 @@ export async function fetchProfileByServerId(id: string) {
         throw new Error(`Failed to fetch profile,server owner id ${id}`)
     }
 }
+
+// Fetch profile by server ID
+// export async function fetchProfileByServerId(id: string) {
+//     try {
+//         const profile = await currentProfile();
+//         const server = await db.server.findUnique({
+//             where: {
+//                 serverId: id,
+//             },
+//             include: {
+//                 owner: true,
+//                 memberships: {
+//                     include: {
+//                         profile: true,
+//                     },
+//                 },
+//             },
+//         });
+
+//         if (!server) {
+//             return null;
+//             // throw new Error(`Server with ID ${id} not found`);
+//         }
+
+//         return {
+//             owner: server.owner,
+//             members: server.memberships.map(membership => ({
+//                 profile: membership.profile,
+//                 role: membership.serverRole,
+//             })),
+//         };
+//     } catch (error) {
+//         console.error(error);
+//         throw new Error(`Failed to fetch profile and server owner by id ${id}`);
+//     }
+// }
 
 //get the server role of a specific server for a profile
 export async function fetchRoleByServerId(id: string) {
@@ -208,7 +244,7 @@ export async function fetchChannels(id: string) {
             },
             orderBy: {
                 createdAt: 'asc'
-            }
+            },
         })
         if (channels.length === 0) {
             console.warn(`No channels found for server ID ${id}`);
@@ -602,5 +638,98 @@ export async function fetchChannelById(id: string) {
         console.log(error);
         throw new Error(`Fail to fetch channel with id ${id}`)
     }
+}
+
+//delete channel
+export async function deleteChannel(serverId: string, channelId: string) {
+    try {
+        const profile = await currentProfile();
+
+        //Check if the user is the admin of the server
+        await db.server.update({
+            where: {
+                serverId: serverId,
+                memberships: {
+                    some: {
+                        profileId: profile.profileId,
+                        serverRole: {
+                            in: [ServerRoleType.ADMIN, ServerRoleType.MODERATOR]
+                        }
+                    }
+                }
+            },
+            data: {
+                channels: {
+                    delete: {
+                        channelId: channelId,
+                        channelName: {
+                            not: 'general'
+                        }
+                    }
+                }
+            }
+
+        });
+
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to delete server: ${error}`);
+    }
+    revalidatePath(`/server/${serverId}`)
+    redirect(`/server/${serverId}`)
+}
+
+//update channel
+export async function updateChannel(serverId: string, channelId: string, prevState: CreateChannelState, formData: FormData) {
+    const rowFormData = {
+        name: formData.get('channelName'),
+        type: formData.get('type')
+    }
+    const safeFormData = CreateChannelFormSchema.safeParse(rowFormData)
+    console.log(safeFormData);
+
+    if (!safeFormData.success) {
+        return {
+            errors: safeFormData.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Update Channel'
+        }
+    }
+
+    try {
+        const profile = await currentProfile()
+        //Check if the user has the necessary role
+        await db.server.update({
+            where: {
+                serverId: serverId,
+                memberships: {
+                    some: {
+                        profileId: profile.profileId,
+                        serverRole: {
+                            in: [ServerRoleType.ADMIN, ServerRoleType.MODERATOR]
+                        }
+                    }
+                }
+            },
+            data: {
+                channels: {
+                    update: {
+                        where: {
+                            channelId: channelId,
+                        },
+                        data: {
+                            channelName: safeFormData.data.name
+                        }
+                    }
+                }
+            }
+
+        });
+
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to update channel: ${error}`);
+    }
+    revalidatePath(`/server/${serverId}/${channelId}`)
+    redirect(`/server/${serverId}/${channelId}`)
 }
 
