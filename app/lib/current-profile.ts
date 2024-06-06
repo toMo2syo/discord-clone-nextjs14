@@ -1,24 +1,29 @@
-import { auth } from '@clerk/nextjs/server'
-
-import { db } from '@/app/lib/db'
-import { initialProfile } from './initial-profile'
+import { auth } from '@clerk/nextjs/server';
+import { db } from '@/app/lib/db';
+import { initialProfile } from './initial-profile';
 
 export async function currentProfile() {
-    const { userId, redirectToSignIn } = auth()
+    const { userId, redirectToSignIn } = auth();
+
     if (!userId) {
-        return redirectToSignIn()
+        console.error('No user ID found. Redirecting to sign-in.');
+        return redirectToSignIn();
     }
+
     try {
-        const profile = await db.profile.findUnique({
+        let profile = await db.profile.findUnique({
             where: {
                 profileId: userId
             }
-        })
+        });
+
         if (!profile) {
-            return await initialProfile()
+            profile = await initialProfile();
         }
-        return profile
+
+        return profile;
     } catch (error) {
-        throw new Error(`Failed to fetch current profile`)
+        console.error('Error fetching profile:', error);
+        throw new Error('Failed to fetch current profile');
     }
 }

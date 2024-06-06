@@ -1,36 +1,32 @@
 'use client'
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Dispatch, SetStateAction } from "react";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePathname, useRouter } from "next/navigation";
-import { ModalType } from "../server-menu";
 import clsx from "clsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Channel, ChannelType } from "@prisma/client";
-import { CreateChannelState, createChannel, updateChannel } from "@/app/lib/actions";
+import { CreateChannelState, updateChannel } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
-import { ChannelModalType } from "./channel";
+import { Dispatch, SetStateAction, useEffect } from "react";
 
 export default function EditChannelModal({
+    open,
+    setOpen,
     channel,
-    isOpen,
-    onClose
 }: {
+    open: boolean,
+    setOpen: Dispatch<SetStateAction<boolean>>,
     channel: Channel,
-    isOpen: boolean,
-    onClose: Dispatch<SetStateAction<ChannelModalType>>
 }) {
     const pathname = usePathname()
     const serverId = pathname.split('/')[2]
     const channelId = pathname.split('/')[3]
     const router = useRouter()
-    if (!serverId || !channelId) {
-        router.replace('/server')
-    }
+
     const initialState: CreateChannelState = { errors: {}, message: null }
     const updateChannelWithId = updateChannel.bind(null, serverId, channelId)
     const [error, dispatch] = useFormState(updateChannelWithId, initialState)
     return (
-        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'EDIT' : '')}>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="text-center">Edit Channel</DialogTitle>
@@ -70,12 +66,7 @@ export default function EditChannelModal({
                                     ))}
                             </div>
                             <div className={clsx("w-full flex justify-end")}>
-                                {/* <div
-                                    className="flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark"
-                                >
-                                    <button className="outline-none">Create</button>
-                                </div> */}
-                                <Submit onClose={onClose} />
+                                <Submit />
                             </div>
                         </div>
                     </div>
@@ -85,12 +76,8 @@ export default function EditChannelModal({
         </Dialog>
     )
 }
-function Submit({
-    onClose
-}: {
-    onClose: Dispatch<SetStateAction<ChannelModalType>>
-}) {
-    const { pending, data, method, action } = useFormStatus();
+function Submit() {
+    const { pending } = useFormStatus();
     return (
         <div>
             <button

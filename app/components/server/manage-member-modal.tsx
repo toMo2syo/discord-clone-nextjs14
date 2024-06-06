@@ -1,15 +1,14 @@
 'use client'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { ModalType } from "./server-menu";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { fetchServerMembersById, removeMemberFromServer, updateServerRole } from "@/app/lib/actions";
 import { Profile, ServerRoleType } from "@prisma/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Avatar from "./Avatar";
 import { Check, EllipsisVertical, Loader2, ShieldQuestion, UserRound, UserRoundCheck, UserRoundCog, UserX } from "lucide-react";
-type ProfileWithRole = {
+import { useModal } from "@/app/provider/modal-provider";
+export type ProfileWithRole = {
     profile: Profile,
     role: ServerRoleType
 }
@@ -18,27 +17,19 @@ const roleIconMap = {
     'MODERATOR': <UserRoundCheck className="h-4 w-4 ml-2 text-main" />,
     'GUEST': null,
 }
-export default function ManageMemberModal({
-    isOpen,
-    onClose
-}: {
-    isOpen: boolean,
-    onClose: Dispatch<SetStateAction<ModalType>>
-}) {
-    const pathname = usePathname()
-    const serverId = pathname.split('/')[2]
+export default function ManageMemberModal() {
     const [members, setMembers] = useState<ProfileWithRole[] | null>(null)
     const [loadingId, setLoadingId] = useState("")
     const [fetchTrigger, setFetchTrigger] = useState(0)
 
-    const router = useRouter()
+    const { modal, setModal, data } = useModal()
+    const serverId = data?.serverId
 
     async function onRoleChange(memberId: string, role: ServerRoleType) {
         console.log(role);
         try {
             setLoadingId(memberId)
             await updateServerRole(serverId, memberId, role)
-            // router.refresh()
             setFetchTrigger(prev => prev + 1)  // Update the state to trigger re-fetch
         } catch (error) {
             console.error(error);
@@ -74,7 +65,7 @@ export default function ManageMemberModal({
     }, [serverId, fetchTrigger])
 
     return (
-        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'MANAGE' : '')}>
+        <Dialog open={modal === 'MANAGE_MEMBER'} onOpenChange={open => setModal(open ? 'MANAGE_MEMBER' : '')}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="text-center">Manage Members</DialogTitle>

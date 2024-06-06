@@ -1,25 +1,19 @@
 'use client'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { ModalType } from "./server-menu";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, RefreshCcw } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { fetchServerInviteCodeById, updateServerInviteCode } from "@/app/lib/actions";
 import clsx from "clsx";
+import { useModal } from "@/app/provider/modal-provider";
 
-export default function InvitePeopleModal({
-    isOpen,
-    onClose
-}: {
-    isOpen: boolean,
-    onClose: Dispatch<SetStateAction<ModalType>>
-}) {
+export default function InvitePeopleModal() {
     const [inviteURl, setInviteURl] = useState('')
     const [copied, setCopied] = useState(false)
     const [loading, setLoading] = useState(false)
-    const pathname = usePathname()
-    const serverId = pathname.split('/')[2]
+
+    const { modal, data, setModal } = useModal()
+    const serverId = data?.serverId
 
 
     function onCopied() {
@@ -60,7 +54,7 @@ export default function InvitePeopleModal({
     }, [serverId])
 
     return (
-        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'INVITE' : '')}>
+        <Dialog open={modal === 'INVITE_PEOPLE'} onOpenChange={open => setModal(open ? 'INVITE_PEOPLE' : '')}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="text-center">Invite Friends</DialogTitle>

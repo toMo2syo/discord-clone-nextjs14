@@ -1,15 +1,16 @@
-import { getInitialServers } from "@/app/lib/actions"
+import { fetchDefaultChannel } from "@/app/lib/actions"
 import { redirect } from "next/navigation"
 
 export default async function Page() {
     //get initial server when a user login
-    const servers = await getInitialServers()
-    console.log(servers);
+    const server = await fetchDefaultChannel()
 
-    if (servers.length > 0) {
-        return redirect(`/server/${servers[0].serverId}`)
+    if (server) {
+        return redirect(`/server/${server?.serverId}/${server?.channels[0].channelId}`)
     }
     return (
-        <div>create a server</div>
+        <div>
+            create a server
+        </div>
     )
 }

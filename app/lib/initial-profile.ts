@@ -1,23 +1,26 @@
 import { currentUser, auth } from "@clerk/nextjs/server";
 import { db } from "./db";
-import { ProfileStatus } from "@prisma/client";
 
 export async function initialProfile() {
-    const user = await currentUser()
-    const { redirectToSignIn } = auth()
+    const user = await currentUser();
+
+    const { redirectToSignIn } = auth();
 
     if (!user) {
-        return redirectToSignIn()
+        console.error('No user found. Redirecting to sign-in.');
+        return redirectToSignIn();
     }
 
     try {
-        const profile = await db.profile.findUnique({
+        const existingProfile = await db.profile.findUnique({
             where: {
                 profileId: user.id
             }
-        })
+        });
 
-        if (profile) return profile
+        if (existingProfile) {
+            return existingProfile;
+        }
 
         const newProfile = await db.profile.create({
             data: {
@@ -25,14 +28,14 @@ export async function initialProfile() {
                 name: `${user.firstName} ${user.lastName}`,
                 avatarUrl: user.imageUrl,
                 email: user.emailAddresses[0].emailAddress,
-                status: ProfileStatus.ONLINE,
                 lastOnlineTime: new Date()
             }
-        })
-        return newProfile
+        });
+
+        return newProfile;
 
     } catch (error) {
-        console.error(error)
+        console.error('Error initializing profile:', error);
         throw new Error("Failed to initialize profile. Please try again later.");
     }
 }

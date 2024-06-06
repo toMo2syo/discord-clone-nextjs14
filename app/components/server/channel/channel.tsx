@@ -4,21 +4,22 @@ import { Channel, ChannelType } from "@prisma/client";
 import { Arrow } from "@radix-ui/react-tooltip";
 import clsx from "clsx";
 import { Hash, LockKeyhole, PencilLine, Trash2, Video, Volume2 } from "lucide-react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import DeleteChannelModal from "./delete-channel-modal";
 import EditChannelModal from "./edit-channel-modal";
+import { useState } from "react";
+import { useModal } from "@/app/provider/modal-provider";
 
-export type ChannelModalType = 'EDIT' | 'DELETE' | ''
 
 export default function ChannelList({ channel }: { channel: Channel }) {
     const pathname = usePathname()
     const router = useRouter()
-    const [channelModal, setChannelModal] = useState<ChannelModalType>('')
+    const [open, setOpen] = useState(false)
+    const { openModal } = useModal()
     return (
         <>
-            <div onClick={() => {
+            <div onClick={(e: React.MouseEvent) => {
+                e.stopPropagation()
+                console.log('clicked');
                 router.push(`/server/${channel.serverId}/${channel.channelId}`)
             }} className="block mb-1">
                 <div className={clsx("flex items-center gap-1 h-[34px] rounded-sm cursor-pointer hover:bg-[#d7d9dc] dark:hover:bg-[#404249] group", {
@@ -41,7 +42,7 @@ export default function ChannelList({ channel }: { channel: Channel }) {
                                 <Tooltip>
                                     <TooltipTrigger asChild onClick={(e: React.MouseEvent) => {
                                         e.stopPropagation()
-                                        setChannelModal('EDIT')
+                                        setOpen(true)
                                     }}>
                                         <button>
                                             <PencilLine width={18} height={18} strokeWidth={2} className="z-20 text-[#5C5E66] dark:text-[#fafaf9]" />
@@ -57,7 +58,7 @@ export default function ChannelList({ channel }: { channel: Channel }) {
                                 <Tooltip>
                                     <TooltipTrigger asChild onClick={(e: React.MouseEvent) => {
                                         e.stopPropagation()
-                                        setChannelModal('DELETE')
+                                        openModal('DELETE_CHANNEL')
                                     }}>
                                         <button>
                                             <Trash2 width={18} height={18} strokeWidth={2} className="text-[#5C5E66] dark:text-[#fafaf9] z-20" />
@@ -73,8 +74,7 @@ export default function ChannelList({ channel }: { channel: Channel }) {
                     }
                 </div>
             </div>
-            {channelModal === 'DELETE' && <DeleteChannelModal isOpen={channelModal === 'DELETE'} onClose={setChannelModal} />}
-            {channelModal === 'EDIT' && <EditChannelModal channel={channel} isOpen={channelModal === 'EDIT'} onClose={setChannelModal} />}
+            {<EditChannelModal open={open} setOpen={setOpen} channel={channel} />}
         </>
     )
 }

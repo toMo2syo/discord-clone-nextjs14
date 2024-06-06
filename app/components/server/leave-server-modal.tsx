@@ -1,25 +1,19 @@
 'use client'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Dispatch, SetStateAction } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { leaveServer } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
-import { ModalType } from "./server-menu";
+import { useModal } from "@/app/provider/modal-provider";
 
-export default function LeaveServerModal({
-    isOpen,
-    onClose
-}: {
-    isOpen: boolean,
-    onClose: Dispatch<SetStateAction<ModalType>>
-}) {
+export default function LeaveServerModal() {
     const pathname = usePathname()
     const serverId = pathname.split('/')[2]
     const leaveServerWithId = leaveServer.bind(null, serverId)
     const [error, dispatch] = useFormState(leaveServerWithId, undefined)
+    const { modal, setModal, closeModal } = useModal()
     return (
-        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'LEAVE' : '')}>
+        <Dialog open={modal === 'LEAVE_SERVER'} onOpenChange={open => setModal(open ? 'LEAVE_SERVER' : '')}>
             <DialogContent className="gap-0 px-0 pb-0 dark:bg-[#2b2d31]">
                 <DialogHeader>
                     <DialogTitle className="text-center">Leave Server</DialogTitle>
@@ -33,13 +27,13 @@ export default function LeaveServerModal({
                             <div className="flex gap-3">
                                 <div>
                                     <button
-                                        onClick={() => onClose('')}
+                                        onClick={() => closeModal()}
                                         className="w-[96px] h-[38px] outline-none border-none py-[2px] px-[16px] rounded-sm text-[#9599a1] text-sm font-semibold ">
                                         Cancel
                                     </button>
                                 </div>
                                 <div>
-                                    <Submit onClose={onClose} />
+                                    <Submit />
                                 </div>
                             </div>
                         </div>
@@ -50,11 +44,7 @@ export default function LeaveServerModal({
         </Dialog>
     )
 }
-function Submit({
-    onClose
-}: {
-    onClose: Dispatch<SetStateAction<ModalType>>
-}) {
+function Submit() {
     const { pending } = useFormStatus();
     return (
         <div

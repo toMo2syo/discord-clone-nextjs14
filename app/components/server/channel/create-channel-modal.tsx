@@ -1,28 +1,21 @@
 'use client'
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Dispatch, SetStateAction } from "react";
-import { usePathname } from "next/navigation";
-import { ModalType } from "../server-menu";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import clsx from "clsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ChannelType } from "@prisma/client";
 import { CreateChannelState, createChannel } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
+import { useModal } from "@/app/provider/modal-provider";
 
-export default function CreateChannelModal({
-    isOpen,
-    onClose
-}: {
-    isOpen: boolean,
-    onClose: Dispatch<SetStateAction<ModalType>>
-}) {
-    const pathname = usePathname()
-    const serverId = pathname.split('/')[2]
+export default function CreateChannelModal() {
     const initialState: CreateChannelState = { errors: {}, message: null }
+    const { modal, setModal, data } = useModal()
+    const serverId = data?.serverId
     const createChannelWithId = createChannel.bind(null, serverId)
     const [error, dispatch] = useFormState(createChannelWithId, initialState)
+
     return (
-        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'CREATE' : '')}>
+        <Dialog open={modal === 'CREATE_CHANNEL'} onOpenChange={open => setModal(open ? 'CREATE_CHANNEL' : '')}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="text-center">Create Channel</DialogTitle>
@@ -62,12 +55,7 @@ export default function CreateChannelModal({
                                     ))}
                             </div>
                             <div className={clsx("w-full flex justify-end")}>
-                                {/* <div
-                                    className="flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark"
-                                >
-                                    <button className="outline-none">Create</button>
-                                </div> */}
-                                <Submit onClose={onClose} />
+                                <Submit />
                             </div>
                         </div>
                     </div>
@@ -77,11 +65,7 @@ export default function CreateChannelModal({
         </Dialog>
     )
 }
-function Submit({
-    onClose
-}: {
-    onClose: Dispatch<SetStateAction<ModalType>>
-}) {
+function Submit() {
     const { pending, data, method, action } = useFormStatus();
     return (
         <button

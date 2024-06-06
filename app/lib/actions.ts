@@ -10,8 +10,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { redirect } from 'next/navigation'
 
 
-//get all intial servers when a user log in
-export const getInitialServers = cache(async () => {
+//get intial servers when a user log in
+export const fetchServers = cache(async () => {
     const profile = await currentProfile()
     // if (!profile) {
     //     return redirect('/')
@@ -35,6 +35,44 @@ export const getInitialServers = cache(async () => {
     }
 })
 
+//get the first channel of first created server of current user
+export async function fetchDefaultChannel() {
+    try {
+        const profile = await currentProfile();
+
+        if (!profile) {
+            throw new Error("User not authenticated");
+        }
+
+        const newestServer = await db.server.findFirst({
+            where: {
+                ownerId: profile.profileId,
+            },
+            orderBy: {
+                createdAt: 'asc',
+            },
+            include: {
+                channels: {
+                    orderBy: {
+                        createdAt: 'asc',
+                    },
+                    take: 1,
+                },
+            },
+        });
+
+        if (newestServer && newestServer.channels.length > 0) {
+            console.log(newestServer);
+            return newestServer
+        }
+
+        return null; // Return null if there's no server or channel found
+    } catch (error) {
+        console.error("Error fetching default channel:", error);
+        throw error;
+    }
+}
+
 // create server
 export async function createServer({ servername, imageUrl }: ServerformDataType) {
     const validatedFields = CreateServerformSchema.safeParse({
@@ -43,13 +81,13 @@ export async function createServer({ servername, imageUrl }: ServerformDataType)
     })
 
     if (!validatedFields.success) {
-        console.log(validatedFields);
-
         return {
             errors: validatedFields.error.flatten().fieldErrors,
             message: 'Missing Fields.Failed to Create Server'
         }
     }
+    console.log(validatedFields);
+
     let server: Server | null = null
     try {
         const profile = await currentProfile()
@@ -136,9 +174,7 @@ export async function fetchServerById(id: string) {
                 serverId: id
             }
         })
-        console.log(server);
 
-        console.log('Server data:', server)  // Debug log
         return server
     } catch (error) {
         console.error(error);
@@ -146,7 +182,7 @@ export async function fetchServerById(id: string) {
     }
 }
 
-//Fetch profile by server ID
+//Fetch the owner of a server by server ID
 export async function fetchProfileByServerId(id: string) {
     try {
         const profile = await currentProfile()
@@ -213,7 +249,10 @@ export async function fetchProfileByServerId(id: string) {
 //get the server role of a specific server for a profile
 export async function fetchRoleByServerId(id: string) {
     try {
-        const profile = await currentProfile()
+        const profile = await currentProfile();
+        if (!profile) {
+            throw new Error('Failed to fetch current profile');
+        }
         const role = await db.serverMembership.findUnique({
             where: {
                 serverId_profileId: {
@@ -221,17 +260,14 @@ export async function fetchRoleByServerId(id: string) {
                     profileId: profile.profileId,
                 }
             }
-        })
-        console.log(role);
+        });
         if (!role) {
-            return null
-            // throw new Error(`Membership not found for profile ID ${profile.profileId} in server ID ${id}`);
+            return null;
         }
-        console.log(role?.serverRole);
-
-        return role?.serverRole
+        return role.serverRole;
     } catch (error) {
-        throw new Error('Internal Error: Failed to fetch server role');
+        console.error(error);
+        throw new Error(`Failed to fetch server role by ID ${id}`);
     }
 }
 
@@ -425,6 +461,8 @@ export async function updateServerRole(serverId: string, memberId: string, role:
         console.error(error);
         throw new Error(`Failed to update server role for member ${memberId} in server ${serverId}`);
     }
+    revalidatePath(`/server/${serverId}`)
+    // redirect(`/server/${serverId}`)
 }
 
 //kick member
@@ -473,11 +511,11 @@ export async function removeMemberFromServer(serverId: string, memberId: string)
             }
         });
 
-        return { message: 'Member kicked successfully.' };
     } catch (error) {
         console.error(error);
         throw new Error(`Failed to kick member: ${error}`);
     }
+    revalidatePath(`/server/${serverId}`)
 }
 
 //leave server
@@ -733,3 +771,21 @@ export async function updateChannel(serverId: string, channelId: string, prevSta
     redirect(`/server/${serverId}/${channelId}`)
 }
 
+//get members of a server
+export async function fetchMembersById(serverId: string) {
+    try {
+        const members = await db.serverMembership.findMany({
+            where: {
+                serverId: serverId
+            },
+            include: {
+                profile: true
+            }
+        });
+
+        return members.map(member => member.profile);
+    } catch (error) {
+        console.error('Error fetching server members:', error);
+        throw new Error('Failed to fetch server members');
+    }
+}

@@ -5,19 +5,17 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
-import SidebarTooltip from "../ui/tooltip"
-import { Plus } from "lucide-react"
 import FileUpload from "./file-upload"
 import { MouseEvent, useState } from "react"
 import { ServerformDataType } from "@/app/lib/definition"
 import { createServer } from "@/app/lib/actions"
 import clsx from "clsx"
+import { useModal } from "@/app/provider/modal-provider"
 
 export default function CreateServerModal() {
     const [loading, setLoading] = useState<Boolean>(false)
-    const [open, setOpen] = useState<boolean | undefined>(false)
+
     const [error, setError] = useState<{
         errors?: {
             servername?: string[],
@@ -29,6 +27,9 @@ export default function CreateServerModal() {
         servername: '',
         imageUrl: ''
     })
+
+    const { modal, setModal, closeModal } = useModal()
+
     async function handleCreateServer(e: MouseEvent, server: ServerformDataType) {
         e.preventDefault()
         try {
@@ -37,27 +38,18 @@ export default function CreateServerModal() {
             if (error) {
                 setError(error)
             } else {
-                setOpen(false)
+                closeModal()
             }
-            // window.location.reload()
-            // window.location.assign('/server')
-            // router.replace(`server/${res?.serverId}`)
         } catch (error) {
             console.error(error);
 
         } finally {
             setLoading(false)
+            setError(null)
         }
     }
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger>
-                <SidebarTooltip delayDuration={100} tip='Add a Server'>
-                    <div className="w-[48px] h-[48px] flex items-center group dark:bg-[#313338] hover:text-[white] justify-center rounded-full transition-colors duration-50 cursor-pointer hover:rounded-2xl bg-white hover:bg-[#23a559] dark:hover:bg-[#23a559]">
-                        <Plus width={24} height={24} className="text-[#23a559] group-hover:text-[white] transition-colors duration-50" />
-                    </div>
-                </SidebarTooltip>
-            </DialogTrigger>
+        <Dialog open={modal === 'CREATE_SERVER'} onOpenChange={open => setModal(open ? 'CREATE_SERVER' : '')}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="text-center">Customize Your Server</DialogTitle>
@@ -104,7 +96,6 @@ export default function CreateServerModal() {
                                     <button className="outline-none">Create</button>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </form>

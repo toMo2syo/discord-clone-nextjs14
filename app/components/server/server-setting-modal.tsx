@@ -7,22 +7,14 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import FileUpload from "./file-upload"
-import { Dispatch, MouseEvent, SetStateAction, useEffect, useState } from "react"
+import { MouseEvent, useEffect, useState } from "react"
 import { ServerformDataType } from "@/app/lib/definition"
-import { fetchServerById, updateServerById } from "@/app/lib/actions"
+import { updateServerById } from "@/app/lib/actions"
 import clsx from "clsx"
-import { ModalType } from "./server-menu"
-import { usePathname } from "next/navigation"
+import { useModal } from "@/app/provider/modal-provider"
+import { Server } from "@prisma/client"
 
-export default function CreateServerModal({
-    isOpen,
-    onClose
-}: {
-    isOpen: boolean,
-    onClose: Dispatch<SetStateAction<ModalType>>
-}) {
-    const pathname = usePathname()
-    const serverId = pathname.split('/')[2]
+export default function ServerSettingModal() {
     const [loading, setLoading] = useState<Boolean>(false)
     const [error, setError] = useState<{
         errors?: {
@@ -35,16 +27,18 @@ export default function CreateServerModal({
         servername: '',
         imageUrl: ''
     })
+    const { modal, closeModal, data, setModal } = useModal()
+    const currentServer: Server = data
 
     async function handleUpdateServer(e: MouseEvent, server: ServerformDataType) {
         e.preventDefault()
         try {
             setLoading(true)
-            const error = await updateServerById(serverId, server)
+            const error = await updateServerById(currentServer.serverId, server)
             if (error) {
                 setError(error)
             } else {
-                onClose('')
+                closeModal()
             }
         } catch (error) {
             console.error(error);
@@ -55,31 +49,21 @@ export default function CreateServerModal({
     }
 
     useEffect(() => {
-        async function fetchServer() {
-            try {
-                const server = await fetchServerById(serverId)
-                if (server) {
-                    setServer({
-                        servername: server.serverName || '',
-                        imageUrl: server.imageUrl || ''
-                    })
-                }
-            } catch (error) {
-                console.error(error);
-            }
+        if (currentServer) {
+            setServer({
+                servername: currentServer.serverName || '',
+                imageUrl: currentServer.imageUrl || ''
+            })
         }
-        if (serverId) {
-            fetchServer()
-        }
-    }, [serverId])
+    }, [currentServer])
 
     return (
-        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'SETTING' : '')}>
+        <Dialog open={modal === 'SERVER_SETTING'} onOpenChange={open => setModal(open ? 'SERVER_SETTING' : '')}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="text-center">Customize Your Server</DialogTitle>
+                    <DialogTitle className="text-center">Edit Your Server</DialogTitle>
                     <DialogDescription className="text-center">
-                        Give your new server a personality with a name and a icon.You can always change it later
+                        You can always change it later
                     </DialogDescription>
                 </DialogHeader>
                 <form>

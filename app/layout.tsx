@@ -5,6 +5,7 @@ import './globals.css';
 import "./globals.css";
 import { cn } from "@/app/lib/utils";
 import { ThemeProvider } from "./provider/ThemeProvider";
+import { ModalProvider } from "./provider/modal-provider";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -34,7 +35,9 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-            {children}
+            <ModalProvider>
+              {children}
+            </ModalProvider>
           </ThemeProvider>
         </body>
       </html>

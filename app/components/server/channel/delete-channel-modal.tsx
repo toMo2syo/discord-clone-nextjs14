@@ -1,30 +1,19 @@
 'use client'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Dispatch, SetStateAction } from "react";
-import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { deleteChannel } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
-import { ChannelModalType } from "./channel";
+import { useModal } from "@/app/provider/modal-provider";
 
-export default function DeleteChannelModal({
-    isOpen,
-    onClose
-}: {
-    isOpen: boolean,
-    onClose: Dispatch<SetStateAction<ChannelModalType>>
-}) {
-    const pathname = usePathname()
-    const serverId = pathname.split('/')[2]
-    const channelId = pathname.split('/')[3]
-    const router = useRouter()
-    if (!serverId || !channelId) {
-        router.replace('/server')
-    }
+export default function DeleteChannelModal() {
+    const { modal, data, setModal, closeModal } = useModal()
+    const serverId = data?.serverId
+    const channelId = data?.channelId
+
     const deleteChannelWithId = deleteChannel.bind(null, serverId, channelId)
     const [error, dispatch] = useFormState(deleteChannelWithId, undefined)
     return (
-        <Dialog open={isOpen} onOpenChange={open => onClose(open ? 'DELETE' : '')}>
+        <Dialog open={modal === 'DELETE_CHANNEL'} onOpenChange={open => setModal(open ? 'DELETE_CHANNEL' : '')}>
             <DialogContent className="gap-0 px-0 pb-0 dark:bg-[#2b2d31]">
                 <DialogHeader>
                     <DialogTitle className="text-center">Delete Channel</DialogTitle>
@@ -39,7 +28,7 @@ export default function DeleteChannelModal({
                             <div className="flex gap-3">
                                 <div>
                                     <button
-                                        onClick={() => onClose('')}
+                                        onClick={() => closeModal()}
                                         className="w-[96px] outline-none border-none h-[38px] py-[2px] px-[16px] rounded-sm text-[#9599a1] text-sm font-semibold ">
                                         Cancel
                                     </button>

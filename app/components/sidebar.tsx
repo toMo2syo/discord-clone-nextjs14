@@ -8,21 +8,15 @@ import Seperator from "./friend/seperator";
 import { UserButton } from "@clerk/nextjs";
 import { ModeToggle } from "./mode-toggle";
 import { Server } from "@prisma/client";
-import CreateServerModal from "./server/create-server-modal";
 import Image from "next/image";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Plus } from "lucide-react";
+import { useModal } from "../provider/modal-provider";
 export default function SideBar({ servers }: { servers: Server[] | null }) {
     const pathname = usePathname()
+    // const pathname = '/server/72a6dcb8-06fb-4683-99d5-49efbbd1e413/fdcdeccf-72f6-44b3-9908-6d46347a963a'
+    const { openModal } = useModal()
     const isInFriendPage = pathname.startsWith('/friend')
-
-    //after redirection,the url may not be updated correctly,we need refresh the page manuly to get the correct url
-    // const router = useRouter()
-    // useEffect(() => {
-    //     if (pathname === '/sign-in') {
-    //         // window.location.reload()
-    //         router.replace('/friend/online')
-    //     }
-    // }, [pathname, router])
 
     return (
         <div className="min-w-[72px] bg-[#e3e5e8] dark:bg-[#1e1f22] h-screens pt-3 flex flex-col gap-2 items-center">
@@ -89,7 +83,13 @@ export default function SideBar({ servers }: { servers: Server[] | null }) {
                     </nav>)}
                 </div>
             </ScrollArea>
-            <CreateServerModal />
+            <div>
+                <SidebarTooltip delayDuration={100} tip='Add a Server'>
+                    <div onClick={() => openModal("CREATE_SERVER")} className="w-[48px] h-[48px] flex items-center group dark:bg-[#313338] hover:text-[white] justify-center rounded-full transition-colors duration-50 cursor-pointer hover:rounded-2xl bg-white hover:bg-[#23a559] dark:hover:bg-[#23a559]">
+                        <Plus width={24} height={24} className="text-[#23a559] group-hover:text-[white] transition-colors duration-50" />
+                    </div>
+                </SidebarTooltip>
+            </div>
             <Seperator />
             <ModeToggle />
             <div className="mt-auto mb-3">
