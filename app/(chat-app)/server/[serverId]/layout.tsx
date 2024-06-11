@@ -18,6 +18,7 @@ export default async function Layout({ params, children }: { params: { serverId:
     if (!profile || !channels || !role || !members) {
         return notFound()
     }
+
     return <>
         <ServerAsidePanel>
             <ServerMenu profile={profile} role={role} />

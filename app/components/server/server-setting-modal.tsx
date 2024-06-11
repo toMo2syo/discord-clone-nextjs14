@@ -98,14 +98,9 @@ export default function ServerSettingModal() {
                             <div className={clsx("w-full flex justify-end", {
                                 "opacity-75": loading
                             })}>
-                                <div
-                                    className="flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark"
-                                    onClick={e => handleUpdateServer(e, server)}
-                                >
-                                    <button className="outline-none">Save</button>
-                                </div>
+                                <button className="flex outline-none items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark"
+                                    onClick={e => handleUpdateServer(e, server)}>Save</button>
                             </div>
-
                         </div>
                     </div>
                 </form>

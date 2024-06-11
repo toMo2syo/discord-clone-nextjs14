@@ -1,32 +1,28 @@
 'use client'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Channel, ChannelType } from "@prisma/client";
 import { CreateChannelState, updateChannel } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { Dispatch, SetStateAction } from "react";
+import { ChannelModalType } from "./channel";
 
 export default function EditChannelModal({
-    open,
-    setOpen,
+    modal,
+    setModal,
     channel,
 }: {
-    open: boolean,
-    setOpen: Dispatch<SetStateAction<boolean>>,
+    modal: ChannelModalType,
+    setModal: Dispatch<SetStateAction<ChannelModalType>>,
     channel: Channel,
 }) {
-    const pathname = usePathname()
-    const serverId = pathname.split('/')[2]
-    const channelId = pathname.split('/')[3]
-    const router = useRouter()
 
     const initialState: CreateChannelState = { errors: {}, message: null }
-    const updateChannelWithId = updateChannel.bind(null, serverId, channelId)
+    const updateChannelWithId = updateChannel.bind(null, channel.serverId, channel.channelId)
     const [error, dispatch] = useFormState(updateChannelWithId, initialState)
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={modal === 'EDIT_CHANNEL'} onOpenChange={open => setModal(open ? 'EDIT_CHANNEL' : '')}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="text-center">Edit Channel</DialogTitle>

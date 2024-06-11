@@ -89,12 +89,9 @@ export default function CreateServerModal() {
                             <div className={clsx("w-full flex justify-end", {
                                 "opacity-75": loading
                             })}>
-                                <div
-                                    className="flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark"
-                                    onClick={e => handleCreateServer(e, server)}
-                                >
-                                    <button className="outline-none">Create</button>
-                                </div>
+
+                                <button className="flex items-center outline-none justify-center w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark"
+                                    onClick={e => handleCreateServer(e, server)} >Create</button>
                             </div>
                         </div>
                     </div>

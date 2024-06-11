@@ -4,7 +4,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { ChevronDown, LogOut, PlusCircle, Settings, Trash, UserPlus, Users } from "lucide-react";
 import { useModal } from "@/app/provider/modal-provider";
 
-export type ModalType = 'INVITE' | 'SETTING' | 'MANAGE' | 'CREATE' | 'DELETE' | 'LEAVE' | ''
 export default function ServerMenu({
     profile,
     role

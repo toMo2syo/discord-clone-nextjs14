@@ -768,7 +768,6 @@ export async function updateChannel(serverId: string, channelId: string, prevSta
         throw new Error(`Failed to update channel: ${error}`);
     }
     revalidatePath(`/server/${serverId}/${channelId}`)
-    redirect(`/server/${serverId}/${channelId}`)
 }
 
 //get members of a server
@@ -787,5 +786,22 @@ export async function fetchMembersById(serverId: string) {
     } catch (error) {
         console.error('Error fetching server members:', error);
         throw new Error('Failed to fetch server members');
+    }
+}
+
+//find the first member of a server
+export async function fetchFirstMembeById(id: string) {
+    try {
+        const profile = await currentProfile()
+        const member = await db.serverMembership.findFirst({
+            where: {
+                serverId: id,
+                profileId: profile.profileId
+            }
+        })
+        return member
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Failed to fetch member with serverId: ${id}`)
     }
 }

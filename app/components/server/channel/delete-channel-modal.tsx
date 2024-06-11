@@ -3,14 +3,21 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import clsx from "clsx";
 import { deleteChannel } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
-import { useModal } from "@/app/provider/modal-provider";
+import { Dispatch, SetStateAction } from "react";
+import { Channel } from "@prisma/client";
+import { ChannelModalType } from "./channel";
 
-export default function DeleteChannelModal() {
-    const { modal, data, setModal, closeModal } = useModal()
-    const serverId = data?.serverId
-    const channelId = data?.channelId
+export default function DeleteChannelModal({
+    modal,
+    setModal,
+    channel,
+}: {
+    modal: ChannelModalType,
+    setModal: Dispatch<SetStateAction<ChannelModalType>>,
+    channel: Channel,
+}) {
 
-    const deleteChannelWithId = deleteChannel.bind(null, serverId, channelId)
+    const deleteChannelWithId = deleteChannel.bind(null, channel.serverId, channel.channelId)
     const [error, dispatch] = useFormState(deleteChannelWithId, undefined)
     return (
         <Dialog open={modal === 'DELETE_CHANNEL'} onOpenChange={open => setModal(open ? 'DELETE_CHANNEL' : '')}>
@@ -28,7 +35,7 @@ export default function DeleteChannelModal() {
                             <div className="flex gap-3">
                                 <div>
                                     <button
-                                        onClick={() => closeModal()}
+                                        onClick={() => setModal('')}
                                         className="w-[96px] outline-none border-none h-[38px] py-[2px] px-[16px] rounded-sm text-[#9599a1] text-sm font-semibold ">
                                         Cancel
                                     </button>

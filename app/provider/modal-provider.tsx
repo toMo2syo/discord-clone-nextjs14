@@ -6,12 +6,11 @@ import CreateChannelModal from "../components/server/channel/create-channel-moda
 import DeleteServerModal from "../components/server/delete-server-modal";
 import LeaveServerModal from "../components/server/leave-server-modal";
 import ServerSettingModal from "../components/server/server-setting-modal";
-import DeleteChannelModal from "../components/server/channel/delete-channel-modal";
 import { usePathname } from "next/navigation";
 import { fetchServerById } from "../lib/actions";
 import CreateServerModal from "../components/server/create-server-modal";
 
-type ModalType = 'INVITE_PEOPLE' | 'SERVER_SETTING' | 'MANAGE_MEMBER' | 'CREATE_SERVER' | 'DELETE_SERVER' | 'LEAVE_SERVER' | 'CREATE_CHANNEL' | 'DELETE_CHANNEL' | '';
+type ModalType = 'INVITE_PEOPLE' | 'SERVER_SETTING' | 'MANAGE_MEMBER' | 'CREATE_SERVER' | 'DELETE_SERVER' | 'LEAVE_SERVER' | 'CREATE_CHANNEL' | '';
 type ModalState = {
     modal: ModalType,
     data: any,
@@ -57,9 +56,6 @@ export function ModalProvider({ children }: { children: ReactNode }) {
             case 'SERVER_SETTING': {
                 return <ServerSettingModal />
             }
-            case 'DELETE_CHANNEL': {
-                return <DeleteChannelModal />
-            }
             case 'CREATE_SERVER': {
                 return <CreateServerModal />
             }
@@ -87,10 +83,6 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                     }
                     case 'SERVER_SETTING': {
                         fetchedData = await fetchServerById(serverId);
-                        break;
-                    }
-                    case 'DELETE_CHANNEL': {
-                        fetchedData = { serverId, channelId };
                         break;
                     }
                     case 'CREATE_SERVER': {
