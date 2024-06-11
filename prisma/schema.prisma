@@ -28,8 +28,8 @@ model Profile {
   receivedFriendRequests   FriendRequest[]            @relation("ReceivedFriendRequests")
   sentMessages             DirectMessage[]            @relation("SentMessages")
   receivedMessages         DirectMessage[]            @relation("ReceivedMessages")
-  convsersationsInitiated  Conversation[]             @relation("profile1")
-  convsersationsRecieved   Conversation[]             @relation("profile2")
+  convsersationsInitiated  Conversation[]             @relation("initiator")
+  convsersationsRecieved   Conversation[]             @relation("reciever")
   friends                  Friend[]                   @relation("ProfileFriends")
   friendOfProfiles         Friend[]                   @relation("FriendOfProfiles")
   ProfileMessageReadStatus ProfileMessageReadStatus[]
@@ -112,18 +112,18 @@ model GroupMessage {
 
 model Conversation {
   conversationId String          @id @default(uuid())
-  profileId1     String
-  profileId2     String
+  initiatorId    String
+  recieverId     String
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   messages       DirectMessage[]
 
-  profile1 Profile @relation("profile1", fields: [profileId1], references: [profileId], onDelete: Cascade)
-  profile2 Profile @relation("profile2", fields: [profileId2], references: [profileId], onDelete: Cascade)
+  initiator Profile @relation("initiator", fields: [initiatorId], references: [profileId], onDelete: Cascade)
+  reciever  Profile @relation("reciever", fields: [recieverId], references: [profileId], onDelete: Cascade)
 
-  @@unique([profileId1, profileId2])
-  @@index([profileId1])
-  @@index([profileId2])
+  @@unique([initiatorId, recieverId])
+  @@index([initiatorId])
+  @@index([recieverId])
 }
 
 model DirectMessage {
