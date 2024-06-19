@@ -14,25 +14,25 @@ enum ProfileStatus {
 }
 
 model Profile {
-  profileId                String                     @id @default(uuid())
-  name                     String
-  email                    String                     @unique
-  avatarUrl                String?
-  introduction             String?
-  lastOnlineTime           DateTime?
-  createdAt                DateTime                   @default(now())
-  status                   ProfileStatus?
-  servers                  Server[]
-  memberships              ServerMembership[]
-  sentFriendRequests       FriendRequest[]            @relation("SentFriendRequests")
-  receivedFriendRequests   FriendRequest[]            @relation("ReceivedFriendRequests")
-  sentMessages             DirectMessage[]            @relation("SentMessages")
-  receivedMessages         DirectMessage[]            @relation("ReceivedMessages")
-  convsersationsInitiated  Conversation[]             @relation("initiator")
-  convsersationsRecieved   Conversation[]             @relation("reciever")
-  friends                  Friend[]                   @relation("ProfileFriends")
-  friendOfProfiles         Friend[]                   @relation("FriendOfProfiles")
-  ProfileMessageReadStatus ProfileMessageReadStatus[]
+  profileId               String              @id @default(uuid())
+  name                    String
+  email                   String              @unique
+  avatarUrl               String?
+  introduction            String?
+  lastOnlineTime          DateTime?
+  createdAt               DateTime            @default(now())
+  status                  ProfileStatus?
+  servers                 Server[]
+  memberships             ServerMembership[]
+  sentFriendRequests      FriendRequest[]     @relation("SentFriendRequests")
+  receivedFriendRequests  FriendRequest[]     @relation("ReceivedFriendRequests")
+  sentMessages            DirectMessage[]     @relation("SentMessages")
+  receivedMessages        DirectMessage[]     @relation("ReceivedMessages")
+  convsersationsInitiated Conversation[]      @relation("initiator")
+  convsersationsRecieved  Conversation[]      @relation("reciever")
+  friends                 Friend[]            @relation("ProfileFriends")
+  friendOfProfiles        Friend[]            @relation("FriendOfProfiles")
+  MessageReadStatus       MessageReadStatus[]
 }
 
 model Server {
@@ -93,18 +93,18 @@ model ServerMembership {
 }
 
 model GroupMessage {
-  messageId    String                     @id @default(uuid())
-  fileUrl      String?                    @db.Text
-  content      String                     @db.Text
-  isEdited     Boolean                    @default(false)
-  isDeleted    Boolean                    @default(false)
-  createdAt    DateTime                   @default(now())
-  updatedAt    DateTime                   @updatedAt
+  messageId    String              @id @default(uuid())
+  fileUrl      String?             @db.Text
+  content      String              @db.Text
+  isEdited     Boolean             @default(false)
+  isDeleted    Boolean             @default(false)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   channelId    String
   membershipId String
-  channel      Channel                    @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
-  member       ServerMembership           @relation(fields: [membershipId], references: [membershipId], onDelete: Cascade)
-  readStatus   ProfileMessageReadStatus[]
+  channel      Channel             @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  member       ServerMembership    @relation(fields: [membershipId], references: [membershipId], onDelete: Cascade)
+  readStatus   MessageReadStatus[]
 
   @@index([channelId])
   @@index([membershipId])
@@ -145,11 +145,14 @@ model DirectMessage {
   @@index([conversationId])
 }
 
-model ProfileMessageReadStatus {
+model MessageReadStatus {
   id        String       @id @default(uuid())
   messageId String
   profileId String
   isRead    Boolean      @default(false)
+  readAt    DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
   message   GroupMessage @relation(fields: [messageId], references: [messageId], onDelete: Cascade)
   profile   Profile      @relation(fields: [profileId], references: [profileId], onDelete: Cascade)
 }
