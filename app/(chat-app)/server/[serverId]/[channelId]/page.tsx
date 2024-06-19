@@ -1,16 +1,29 @@
-import ChatArea from "@/app/components/server/chat-area"
+import Chat from "@/app/components/chat/chat"
+import ChatArea from "@/app/components/chat/chat-area"
+import ChatHeader from "@/app/components/chat/chat-header"
+import ChatInput from "@/app/components/chat/chat-input"
+import ChatWindow from "@/app/components/chat/chat-window"
 import { fetchChannelById, fetchFirstMembeById } from "@/app/lib/actions"
 import { notFound } from "next/navigation"
 
 export default async function page({ params }: { params: { serverId: string, channelId: string } }) {
+    const serverId = params.serverId
+    const channelId = params.channelId
     const [channel, member] = await Promise.all([
-        fetchChannelById(params.channelId),
-        fetchFirstMembeById(params.serverId)
+        fetchChannelById(channelId),
+        fetchFirstMembeById(serverId)
     ])
     if (!channel || !member) {
         notFound()
     }
     return (
-        <ChatArea channel={channel} />
+        <Chat>
+            <ChatHeader type='CHANNEL' channel={channel}></ChatHeader>
+            <ChatWindow>
+                <ChatArea type="CHANNEL" channel={channel} currentMember={member!} />
+                <ChatInput type='CHANNEL' params={{ serverId, channelId }} placeholder={`Message #${channel.channelName}`} />
+            </ChatWindow>
+        </Chat>
     )
 }
+

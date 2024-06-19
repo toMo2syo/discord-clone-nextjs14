@@ -7,11 +7,10 @@ import { useFormState, useFormStatus } from "react-dom";
 import { useModal } from "@/app/provider/modal-provider";
 
 export default function DeleteServerModal() {
-    const pathname = usePathname()
-    const serverId = pathname.split('/')[2]
+    const { modal, setModal, closeModal, data } = useModal()
+    const serverId = data?.serverId
     const deleteServerWithId = deleteServer.bind(null, serverId)
     const [error, dispatch] = useFormState(deleteServerWithId, undefined)
-    const { modal, setModal, closeModal } = useModal()
 
     return (
         <Dialog open={modal === 'DELETE_SERVER'} onOpenChange={open => setModal(open ? 'DELETE_SERVER' : '')}>

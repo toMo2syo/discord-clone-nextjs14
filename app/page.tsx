@@ -1,4 +1,5 @@
 import Image from "next/image";
+import ChatInput from "./components/chat/chat-input";
 
 export default function Home() {
   return (
@@ -108,6 +109,7 @@ export default function Home() {
           </p>
         </a>
       </div>
+      <ChatInput type="CHANNEL" params={{ serverId: '1' }} />
     </main>
   );
 }

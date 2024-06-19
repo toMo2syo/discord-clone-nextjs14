@@ -1,12 +1,14 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { db } from '@/app/lib/db';
+import { db } from './db';
+import { unstable_noStore as noStore } from 'next/cache';
+
 
 export async function currentProfile() {
-    const { userId, redirectToSignIn } = auth();
+    noStore()
+    const { userId } = auth();
 
     if (!userId) {
-        console.error('No user ID found. Redirecting to sign-in.');
-        return redirectToSignIn();
+        return null
     }
 
     try {
@@ -16,12 +18,6 @@ export async function currentProfile() {
             }
         });
 
-        if (!profile) {
-            console.log('Profile not found, creating initial profile...');
-            profile = await initialProfile();
-            console.log('Profile created successfully:', profile);
-        }
-
         return profile;
     } catch (error) {
         console.error('Error fetching profile:', error);
@@ -29,6 +25,20 @@ export async function currentProfile() {
     }
 }
 
+
+export async function findProfile(id: string) {
+    try {
+        let existingProfile = await db.profile.findUnique({
+            where: {
+                profileId: id
+            }
+        });
+        return existingProfile
+    } catch (error) {
+        console.error(error);
+        throw new Error(`Fail to Find Profile with Id: ${id}`);
+    }
+}
 
 export async function initialProfile() {
     const user = await currentUser();
@@ -41,11 +51,7 @@ export async function initialProfile() {
     }
 
     try {
-        let existingProfile = await db.profile.findUnique({
-            where: {
-                profileId: user.id
-            }
-        });
+        let existingProfile = await findProfile(user.id)
 
         if (existingProfile) {
             return existingProfile;
@@ -61,18 +67,6 @@ export async function initialProfile() {
             }
         });
 
-        console.log('New profile created successfully:', newProfile);
-
-        // Check once more to ensure profile creation
-        existingProfile = await db.profile.findUnique({
-            where: {
-                profileId: user.id
-            }
-        });
-
-        if (existingProfile) {
-            return existingProfile;
-        }
         return newProfile;
 
     } catch (error) {

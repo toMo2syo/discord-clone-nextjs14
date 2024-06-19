@@ -1,15 +1,12 @@
 import { ReactNode } from "react";
 import SideBar from "../components/sidebar";
 import { fetchServers } from "../lib/actions";
-import { auth } from "@clerk/nextjs/server";
+import { initialProfile } from "../lib/current-profile";
 
 export default async function layout({ children }: {
     children: ReactNode,
 }) {
-    const { userId, redirectToSignIn } = auth()
-    if (!userId) {
-        return redirectToSignIn()
-    }
+    const profile = await initialProfile()
     const servers = await fetchServers()
 
     return (

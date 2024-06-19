@@ -6,7 +6,7 @@ import { Channel, ChannelType } from "@prisma/client";
 import { CreateChannelState, updateChannel } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
 import { Dispatch, SetStateAction } from "react";
-import { ChannelModalType } from "./channel";
+import { ChannelModalType } from "./channel-list";
 
 export default function EditChannelModal({
     modal,

@@ -1,17 +1,15 @@
 'use client'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { usePathname } from "next/navigation";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import clsx from "clsx";
 import { leaveServer } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
 import { useModal } from "@/app/provider/modal-provider";
 
 export default function LeaveServerModal() {
-    const pathname = usePathname()
-    const serverId = pathname.split('/')[2]
+    const { modal, setModal, closeModal, data } = useModal()
+    const serverId = data?.serverId
     const leaveServerWithId = leaveServer.bind(null, serverId)
     const [error, dispatch] = useFormState(leaveServerWithId, undefined)
-    const { modal, setModal, closeModal } = useModal()
     return (
         <Dialog open={modal === 'LEAVE_SERVER'} onOpenChange={open => setModal(open ? 'LEAVE_SERVER' : '')}>
             <DialogContent className="gap-0 px-0 pb-0 dark:bg-[#2b2d31]">

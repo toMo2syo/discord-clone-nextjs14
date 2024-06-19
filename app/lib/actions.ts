@@ -4,18 +4,20 @@ import { CreateChannelFormSchema, CreateServerformSchema, ServerformDataType } f
 import { db } from "./db"
 import { cache } from "react"
 import { currentProfile } from './current-profile'
-import { ServerRoleType, Server, Channel } from '@prisma/client'
+import { ServerRoleType, Server, Channel, GroupMessage } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { v4 as uuidv4 } from 'uuid';
 import { redirect } from 'next/navigation'
+import { auth } from '@clerk/nextjs/server'
+import { fetchConversation } from './conversation'
 
 
 //get intial servers when a user log in
 export const fetchServers = cache(async () => {
     const profile = await currentProfile()
-    // if (!profile) {
-    //     return redirect('/')
-    // }
+    if (!profile) {
+        return redirect('/sign-in')
+    }
     try {
         const servers = await db.serverMembership.findMany({
             where: {
@@ -35,15 +37,20 @@ export const fetchServers = cache(async () => {
     }
 })
 
+//get current login user
+export async function fetchCurrentProfile() {
+    const profile = await currentProfile()
+    return profile
+}
+
 //get the first channel of first created server of current user
 export async function fetchDefaultChannel() {
+    await new Promise(resolve => setTimeout(resolve, 1000))
     try {
         const profile = await currentProfile();
-
         if (!profile) {
-            throw new Error("User not authenticated");
+            return null
         }
-
         const newestServer = await db.server.findFirst({
             where: {
                 ownerId: profile.profileId,
@@ -62,7 +69,6 @@ export async function fetchDefaultChannel() {
         });
 
         if (newestServer && newestServer.channels.length > 0) {
-            console.log(newestServer);
             return newestServer
         }
 
@@ -86,10 +92,10 @@ export async function createServer({ servername, imageUrl }: ServerformDataType)
             message: 'Missing Fields.Failed to Create Server'
         }
     }
-    console.log(validatedFields);
 
     let server: Server | null = null
     try {
+        // await new Promise(resolve => setTimeout(resolve, 2000))
         const profile = await currentProfile()
         if (profile) {
             server = await db.server.create({
@@ -146,7 +152,7 @@ export async function updateServerById(id: string, { servername, imageUrl }: Ser
         server = await db.server.update({
             where: {
                 serverId: id,
-                ownerId: profile.profileId
+                ownerId: profile?.profileId
             },
             data: {
                 serverName: servername,
@@ -168,7 +174,6 @@ export async function updateServerById(id: string, { servername, imageUrl }: Ser
 //get server by its id
 export async function fetchServerById(id: string) {
     try {
-        console.log('Fetching server from database with ID:', id)  // Debug log
         const server = await db.server.findUnique({
             where: {
                 serverId: id
@@ -186,6 +191,9 @@ export async function fetchServerById(id: string) {
 export async function fetchProfileByServerId(id: string) {
     try {
         const profile = await currentProfile()
+        if (!profile) {
+            return auth().redirectToSignIn()
+        }
         const server = await db.server.findUnique({
             where: {
                 serverId: id,
@@ -199,6 +207,7 @@ export async function fetchProfileByServerId(id: string) {
                 owner: true,
             }
         })
+
         if (!server) {
             return null
             // throw new Error(`Server with ID ${id} not found`);
@@ -257,7 +266,7 @@ export async function fetchRoleByServerId(id: string) {
             where: {
                 serverId_profileId: {
                     serverId: id,
-                    profileId: profile.profileId,
+                    profileId: profile?.profileId,
                 }
             }
         });
@@ -332,7 +341,7 @@ export async function updateServerInviteCode(id: string) {
         const server = await db.server.update({
             where: {
                 serverId: id,
-                ownerId: profile.profileId
+                ownerId: profile?.profileId
             },
             data: {
                 inviteCode: uuidv4()
@@ -348,6 +357,9 @@ export async function updateServerInviteCode(id: string) {
 //join a server
 export async function joinServer(inviteCode: string) {
     const profile = await currentProfile()
+    if (!profile) {
+        return null
+    }
     //check if a user is already in the server
     const existingServer = await db.server.findUnique({
         where: {
@@ -419,7 +431,7 @@ export async function fetchServerMembersById(id: string) {
 
         return membersWithRolesFormatted
     } catch (error) {
-        console.log(error);
+        console.error(error);
         throw new Error(`Fail to fetch members with server id ${id}`)
     }
 }
@@ -427,14 +439,17 @@ export async function fetchServerMembersById(id: string) {
 //update role
 export async function updateServerRole(serverId: string, memberId: string, role: ServerRoleType) {
     const profile = await currentProfile()
+    if (!profile) {
+        return null
+    }
     // Get the role of the current user
     const currentUserMembership = await db.serverMembership.findUnique({
         where: {
             serverId_profileId: {
                 serverId: serverId,
                 profileId: profile.profileId,
-            }
-        }
+            },
+        },
     });
 
     if (!currentUserMembership || currentUserMembership.serverRole !== 'ADMIN') {
@@ -455,7 +470,7 @@ export async function updateServerRole(serverId: string, memberId: string, role:
             },
             data: {
                 serverRole: role
-            }
+            },
         })
     } catch (error) {
         console.error(error);
@@ -469,6 +484,9 @@ export async function updateServerRole(serverId: string, memberId: string, role:
 export async function removeMemberFromServer(serverId: string, memberId: string) {
     try {
         const profile = await currentProfile()
+        if (!profile) {
+            return null
+        }
         // Get the role of the current user
         const currentUserMembership = await db.serverMembership.findUnique({
             where: {
@@ -520,11 +538,12 @@ export async function removeMemberFromServer(serverId: string, memberId: string)
 
 //leave server
 export async function leaveServer(serverId: string) {
-    console.log('called');
 
     try {
         const profile = await currentProfile();
-
+        if (!profile) {
+            return null
+        }
         // Check if the user is the admin of the server
         const membership = await db.serverMembership.findUnique({
             where: {
@@ -537,7 +556,6 @@ export async function leaveServer(serverId: string) {
                 server: true
             }
         });
-        console.log(membership);
 
         if (!membership) {
             throw new Error('Membership not found');
@@ -568,7 +586,9 @@ export async function leaveServer(serverId: string) {
 export async function deleteServer(serverId: string) {
     try {
         const profile = await currentProfile();
-
+        if (!profile) {
+            return null
+        }
         //Check if the user is the admin of the server
         const server = await db.server.findUnique({
             where: {
@@ -608,7 +628,7 @@ export type CreateChannelState = {
         type?: string[]
     };
     message?: string | null
-} | undefined
+} | null | undefined
 export async function createChannel(serverId: string, prevState: CreateChannelState, formData: FormData) {
     const rowFormData = {
         name: formData.get('channelName'),
@@ -628,6 +648,9 @@ export async function createChannel(serverId: string, prevState: CreateChannelSt
     // await new Promise(resolve => setTimeout(resolve, 2000))
     try {
         const profile = await currentProfile()
+        if (!profile) {
+            return null
+        }
         //Check if the user has the necessary role
         const membership = await db.serverMembership.findFirst({
             where: {
@@ -658,7 +681,6 @@ export async function createChannel(serverId: string, prevState: CreateChannelSt
         console.error(error);
         throw new Error(`Failed to create channel: ${error}`);
     }
-    console.log(newChannel.channelId)
     revalidatePath(`/server/${serverId}/${newChannel.channelId}`)
     redirect(`/server/${serverId}/${newChannel.channelId}`)
 }
@@ -669,11 +691,10 @@ export async function fetchChannelById(id: string) {
         const channel = await db.channel.findUnique({
             where: {
                 channelId: id
-            }
+            },
         })
         return channel
     } catch (error) {
-        console.log(error);
         throw new Error(`Fail to fetch channel with id ${id}`)
     }
 }
@@ -682,7 +703,9 @@ export async function fetchChannelById(id: string) {
 export async function deleteChannel(serverId: string, channelId: string) {
     try {
         const profile = await currentProfile();
-
+        if (!profile) {
+            return null
+        }
         //Check if the user is the admin of the server
         await db.server.update({
             where: {
@@ -724,7 +747,6 @@ export async function updateChannel(serverId: string, channelId: string, prevSta
         type: formData.get('type')
     }
     const safeFormData = CreateChannelFormSchema.safeParse(rowFormData)
-    console.log(safeFormData);
 
     if (!safeFormData.success) {
         return {
@@ -735,6 +757,9 @@ export async function updateChannel(serverId: string, channelId: string, prevSta
 
     try {
         const profile = await currentProfile()
+        if (!profile) {
+            return null
+        }
         //Check if the user has the necessary role
         await db.server.update({
             where: {
@@ -768,6 +793,7 @@ export async function updateChannel(serverId: string, channelId: string, prevSta
         throw new Error(`Failed to update channel: ${error}`);
     }
     revalidatePath(`/server/${serverId}/${channelId}`)
+    // redirect(`/server/${serverId}/${channelId}`)
 }
 
 //get members of a server
@@ -793,15 +819,91 @@ export async function fetchMembersById(serverId: string) {
 export async function fetchFirstMembeById(id: string) {
     try {
         const profile = await currentProfile()
+        if (!profile) {
+            return null
+        }
         const member = await db.serverMembership.findFirst({
             where: {
                 serverId: id,
                 profileId: profile.profileId
+            },
+            include: {
+                profile: true,
             }
         })
-        return member
+        if (!member) {
+            return null
+        }
+        return {
+            profile: member?.profile,
+            role: member?.serverRole
+        }
     } catch (error) {
         console.error(error);
         throw new Error(`Failed to fetch member with serverId: ${id}`)
+    }
+}
+
+//initialize conversation
+export async function initializeConversation(serverId: string, memberId: string) {
+    //get the current profile
+    const profile = await currentProfile()
+    if (!profile) {
+        return auth().redirectToSignIn()
+    }
+
+    //
+    const currentMember = await db.serverMembership.findFirst({
+        where: {
+            serverId,
+            profileId: memberId
+        }
+    })
+
+    if (!currentMember) {
+        return redirect('/server')
+    }
+
+    const conversation = await fetchConversation(profile.profileId, memberId)
+
+    if (!conversation) {
+        return redirect(`/server/${serverId}`)
+    }
+
+    const { initiator, reciever } = conversation
+    const other = initiator.profileId === profile.profileId ? reciever : initiator
+    return other
+}
+
+//fetch gorup messages
+export async function fetchGroupMessages({ channelId, limit, cursor }: {
+    channelId: string,
+    limit: number,
+    cursor?: string | null
+}) {
+    try {
+        const messages = await db.groupMessage.findMany({
+            where: {
+                channelId
+            },
+            take: limit + 1, // Fetch one extra item to check if there is a next page
+            skip: cursor ? 1 : 0,
+            cursor: cursor ? { messageId: cursor } : undefined,
+            include: {
+                member: {
+                    include: {
+                        profile: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+        const nextCursor = messages.length > limit ? messages.pop()?.messageId : null;
+
+        return { messages, nextCursor };
+    } catch (error) {
+        console.error("[FETCH MESSAGE ERROR]", error)
     }
 }

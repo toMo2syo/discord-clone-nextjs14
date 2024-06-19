@@ -11,12 +11,12 @@ import clsx from "clsx"
 import { useModal } from "@/app/provider/modal-provider"
 import { UploadDropzone } from "@/app/lib/uploadthing"
 import { useSocket } from "@/app/provider/socket-provider"
-import { Image as ImageIcon, FileText, X } from "lucide-react"
+import { Image as ImageIcon, FileText, X, } from "lucide-react"
 import { UploadedFileData } from "uploadthing/types"
 import Image from "next/image"
 
 export default function AttcahFileModal() {
-    const [loading, setLoading] = useState<Boolean>(false)
+    const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState('')
 
     const [file, setFile] = useState<UploadedFileData | null>(null)
@@ -24,19 +24,23 @@ export default function AttcahFileModal() {
     const { modal, setModal, closeModal, data } = useModal()
     const serverId = data?.serverId
     const channelId = data?.channelId
+    console.log(loading);
 
     async function handleSendAttachment(e: MouseEvent, file: UploadedFileData | null) {
-        console.log('clicked');
         e.preventDefault()
         try {
             setLoading(true)
+            console.log(file);
+
             if (isConnected && socket && file !== null) {
-                socket.emit('message', {
+                socket.emit('group message', {
                     content: file.name,
                     fileUrl: file.url,
                     serverId,
                     channelId
                 }, (response: any) => {
+                    console.log(response);
+
                     if (response.status !== 'success') {
                         setError(response.message)
                     }
@@ -67,7 +71,7 @@ export default function AttcahFileModal() {
                         <div className="flex flex-col items-center">
                             {file && file.type === 'application/pdf' && (
                                 <div className="bg-gray-100 my-4 flex gap-4 p-2 rounded-md items-center relative">
-                                    <FileText />
+                                    <FileText className="text-rose-500" />
                                     <a href={file.url} target="_blank" rel="noopener noreferer" className="hover:underline">
                                         {file.name}
                                     </a>
@@ -79,7 +83,7 @@ export default function AttcahFileModal() {
                                     </div>
                                 </div>
                             )}
-                            {file && file.type === 'image/jpeg' && (
+                            {file && file.type.startsWith('image') && (
                                 <div className="my-4 flex gap-4 p-2 rounded-md items-center relative">
                                     <a href={file.url} target="_blank" rel="noopener noreferer">
                                         <Image
@@ -100,10 +104,9 @@ export default function AttcahFileModal() {
                             )}
                             {file === null && (
                                 <div>
-                                    <UploadDropzone endpoint="messageFile" className="dark:border-gray-400" onClientUploadComplete={(res) => {
+                                    <UploadDropzone endpoint="messageFile" className="dark:border-gray-400" onUploadBegin={() => setLoading(true)} onClientUploadComplete={(res) => {
                                         setFile(res[0])
-                                        console.log(res);
-
+                                        setLoading(false)
                                     }} />
                                 </div>
                             )}
@@ -112,10 +115,13 @@ export default function AttcahFileModal() {
                                     {error}
                                 </p>
                             </div>
-                            <button className={clsx("outline-none ml-auto w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark", {
-                                "opacity-70": loading
-                            })}
-                                onClick={e => handleSendAttachment(e, file)} >Send</button>
+                            <button
+                                className={clsx("outline-none ml-auto w-[96px] h-[38px] px-4 py-2 rounded-sm bg-main text-white text-sm font-semibold hover:bg-main-dark", {
+                                    "opacity-70": loading
+                                })}
+                                onClick={e => handleSendAttachment(e, file)}
+                                disabled={loading}
+                            >Send</button>
                         </div>
                     </div>
                 </form>

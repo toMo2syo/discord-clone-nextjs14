@@ -20,7 +20,7 @@ export default function ChannelList({ channel }: { channel: Channel }) {
                 e.stopPropagation()
                 router.push(`/server/${channel.serverId}/${channel.channelId}`)
             }} className="block mb-1">
-                <div className={clsx("flex items-center gap-1 h-[34px] rounded-sm cursor-pointer hover:bg-[#d7d9dc] dark:hover:bg-[#404249] group", {
+                <div className={clsx("flex items-center pl-1 gap-1 h-[34px] rounded-sm cursor-pointer hover:bg-[#d7d9dc] dark:hover:bg-[#404249] group", {
                     "bg-[#d7d9dc] dark:bg-[#404249]": pathname.includes(channel.channelId),
                     "": !pathname.includes(channel.channelId)
                 })}>
@@ -31,7 +31,7 @@ export default function ChannelList({ channel }: { channel: Channel }) {
                         "text-text-bold font-medium dark:text-white": pathname.includes(channel.channelId),
                         "text-text-light font-normal": !pathname.includes(channel.channelId),
                     })}>
-                        <span className="text-sm">{channel.channelName}</span>
+                        <span className="text-sm">{channel.channelName.length > 14 ? `${channel.channelName.substring(0, 11)}...` : channel.channelName}</span>
                     </div>
                     {channel.channelName === 'general' && <LockKeyhole width={18} height={18} strokeWidth={2} className="ml-auto mr-2 text-[#5C5E66] dark:text-[#fafaf9]" />}
                     {channel.channelName !== 'general' &&

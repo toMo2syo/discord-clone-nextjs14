@@ -2,9 +2,8 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import SidebarTooltip from "./ui/tooltip";
+import ActionTooltip from "./ui/action-tooltip";
 import Seperator from "./friend/seperator";
-
 import { UserButton } from "@clerk/nextjs";
 import { ModeToggle } from "./mode-toggle";
 import { Server } from "@prisma/client";
@@ -21,7 +20,7 @@ export default function SideBar({ servers }: { servers: Server[] | null }) {
     return (
         <div className="min-w-[72px] bg-[#e3e5e8] dark:bg-[#1e1f22] h-screens pt-3 flex flex-col gap-2 items-center">
             <div className="w-12 h-12 bg-gray-700 rounded-full">
-                <SidebarTooltip delayDuration={100} tip="Direct Message">
+                <ActionTooltip side="right" delayDuration={100} label="Direct Message">
                     <Link href="/friend/online" className={
                         clsx("w-[48px] h-[48px] relative flex cursor-pointer items-center transition-colors duration-75 ease-in justify-center group hover:bg-main dark:hover:bg-main  hover:rounded-2xl", {
                             "bg-white dark:bg-[#313338] rounded-full": !isInFriendPage,
@@ -37,7 +36,7 @@ export default function SideBar({ servers }: { servers: Server[] | null }) {
                         </svg>
                         {isInFriendPage && (<span className="absolute w-[8px] h-[40px] rounded-r-[4px] top-[4px] -left-[16px] bg-[#060607] dark:bg-[#f2f3f5]"></span>)}
                     </Link>
-                </SidebarTooltip>
+                </ActionTooltip>
             </div>
             <Seperator />
             <ScrollArea className="w-full shadow-inner">
@@ -46,7 +45,7 @@ export default function SideBar({ servers }: { servers: Server[] | null }) {
                     {servers && (<nav className="flex -mt-2 flex-col gap-2 items-center">
                         {servers.map(server => (
                             server?.imageUrl ? (
-                                <SidebarTooltip delayDuration={100} key={server.serverId} tip={server.serverName}>
+                                <ActionTooltip side="right" delayDuration={100} key={server.serverId} label={server.serverName}>
                                     <div className="min-w-[48px] min-h-[48px] mt-2">
                                         <Link
                                             key={server.serverId}
@@ -63,9 +62,9 @@ export default function SideBar({ servers }: { servers: Server[] | null }) {
                                             {pathname.startsWith(`/server/${server.serverId}`) && (<span className="absolute w-[8px] h-[40px] rounded-r-[4px] top-[4px] -left-[16px] bg-[#060607] dark:bg-[#f2f3f5]"></span>)}
                                         </Link>
                                     </div>
-                                </SidebarTooltip>
+                                </ActionTooltip>
                             ) : (
-                                <SidebarTooltip delayDuration={100} key={server.serverId} tip={server.serverName}>
+                                <ActionTooltip side="right" delayDuration={100} key={server.serverId} label={server.serverName}>
                                     <Link href={`/server/${server.serverId}`}
                                         className={clsx("w-[48px] h-[48px] relative dark:bg-[#313338] hover:text-white font-semibold  hover:font-semibold hover:rounded-2xl hover:bg-main-dark dark:hover:bg-main-dark transition-colors duration-50 ease-in flex items-center justify-center", {
                                             'rounded-full bg-white': !pathname.startsWith(`/server/${server.serverId}`),
@@ -76,7 +75,7 @@ export default function SideBar({ servers }: { servers: Server[] | null }) {
                                         {pathname.startsWith(`/server/${server.serverId}`) && (<span className="absolute w-[8px] h-[40px] rounded-r-[4px] top-[4px] -left-[16px] bg-[#060607] dark:bg-[#f2f3f5]"></span>)}
                                     </Link>
                                     <Seperator />
-                                </SidebarTooltip>
+                                </ActionTooltip>
                             )
 
                         ))}
@@ -84,11 +83,11 @@ export default function SideBar({ servers }: { servers: Server[] | null }) {
                 </div>
             </ScrollArea>
             <div>
-                <SidebarTooltip delayDuration={100} tip='Add a Server'>
+                <ActionTooltip side="right" delayDuration={100} label='Add a Server'>
                     <div onClick={() => openModal("CREATE_SERVER")} className="w-[48px] h-[48px] flex items-center group dark:bg-[#313338] hover:text-[white] justify-center rounded-full transition-colors duration-50 cursor-pointer hover:rounded-2xl bg-white hover:bg-[#23a559] dark:hover:bg-[#23a559]">
                         <Plus width={24} height={24} className="text-[#23a559] group-hover:text-[white] transition-colors duration-50" />
                     </div>
-                </SidebarTooltip>
+                </ActionTooltip>
             </div>
             <Seperator />
             <ModeToggle />

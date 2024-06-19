@@ -1,20 +1,17 @@
-import { Hash } from "lucide-react"
+import { formatDateTime } from "@/app/lib/formatDateTime"
 
 export default function ChatWelcome({
     type,
-    name
+    name,
+    timeline
 }: {
     type: "CHANNEL" | "CONVERSATION",
-    name: string
+    name: string,
+    timeline: Date
 }) {
     return (
-        <div className="absolute bottom-24">
-            {type === 'CHANNEL' && (
-                <div className="w-[75px] h-[75px] rounded-full flex items-center justify-center bg-zinc-500 dark:bg-zinc-700">
-                    <Hash className="h-12 w-12 text-white" />
-                </div>
-            )}
-            <p className="text-xl md:text-3xl font-bold">
+        <div className="w-full">
+            <p className="text-[32px] md:text-3xl font-bold">
                 {type === 'CHANNEL' ? `Welcome to #${name}` : ''}
             </p>
             <p className="text-zinc-600 dark:text-zinc-400 text-sm">
@@ -23,6 +20,13 @@ export default function ChatWelcome({
                     `This is the beginning of your conversation with ${name}`
                 }
             </p>
+            <div className="relative flex items-center w-full mt-4">
+                <div className="flex-grow border-t border-gray-300"></div>
+                <span className="mx-1 bg-white px-2 text-gray-500 dark:bg-gray-800 dark:text-gray-300">
+                    {formatDateTime(new Date(timeline))}
+                </span>
+                <div className="flex-grow border-t border-gray-300"></div>
+            </div>
         </div>
     )
 }

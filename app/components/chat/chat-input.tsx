@@ -1,10 +1,10 @@
 'use client'
-import { Plus, Smile } from 'lucide-react'
-import * as z from 'zod'
-import { useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSocket } from '@/app/provider/socket-provider'
 import clsx from 'clsx'
 import { useModal } from '@/app/provider/modal-provider'
+import EmojiPicker from './emoji-picker'
 type ChatInputProps = {
     type: 'CONVERSATION' | 'CHANNEL',
     placeholder?: string,
@@ -15,16 +15,13 @@ type ChatInputProps = {
     }
 }
 
-const formSchema = z.object({
-    content: z.string().min(1)
-})
-
 export default function ChatInput({ type, placeholder, params }: ChatInputProps) {
     const [content, setContent] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const { isConnected, socket } = useSocket()
     const { openModal } = useModal()
+    const chatInptRef = useRef<HTMLInputElement>(null)
     const handleKeyDown = async (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             event.preventDefault()
@@ -41,6 +38,7 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
                     console.log(response);
 
                     if (response.status === 'success') {
+                        console.log(response);
                         setContent('')
                     } else {
                         setError(response.message)
@@ -54,12 +52,28 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
         }
     }
 
+    const handleFocus = useCallback(() => {
+        console.log('focus');
+        chatInptRef?.current?.focus()
+    }, [])
+
+    useEffect(() => {
+        handleFocus()
+    }, [handleFocus])
+
+    useEffect(() => {
+        if (content === '') {
+            handleFocus()
+        }
+    }, [content, handleFocus])
+
     return (
         <div className="bg-[#ebedef] flex items-center gap-4 dark:bg-[#383a40] w-[77%] h-[44px] px-4 py-[11px] rounded-lg fixed bottom-4">
             <div onClick={() => openModal('ATTACH_FILE')} className='p-1 cursor-pointer'>
                 <Plus width={20} height={20} className='bg-[#4e5058] text-white dark:bg-[#b5bac1] dark:text-[#383a40] rounded-full' />
             </div>
             <input
+                ref={chatInptRef}
                 type="text"
                 id="content"
                 name="content"
@@ -75,7 +89,7 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
                 })}
             />
             <div className='p-1 cursor-pointer'>
-                <Smile width={20} height={20} className='hover:text-[#fcc145]  transition transform hover:scale-150' />
+                <EmojiPicker onSelect={(value: string) => setContent(prev => `${prev}${value}`)} />
             </div>
             {error && (
                 <div className="text-red-500 text-sm absolute bottom-16">

@@ -3,14 +3,14 @@ import Image from "next/image"
 
 interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
     src?: string | null;
-    alt: string;
+    alt?: string;
     size?: number;
     className?: string;
     name?: string
 }
 export default function Avatar({
     src,
-    alt,
+    alt = 'avatar',
     size = 48,
     className,
     name,
