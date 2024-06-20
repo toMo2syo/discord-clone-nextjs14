@@ -37,18 +37,17 @@ export default function ChatItem({
     const isImage = (!isPDF && message.fileUrl !== null)
     const isUpdated = JSON.stringify(message.createdAt) !== JSON.stringify(message.updatedAt)
     const isMe = message.member.profileId === currentMember.profile.profileId
+
     const [isEditing, setIsEditting] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const [content, setContent] = useState(message.content)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [open, setOpen] = useState(false)
+
     const { isConnected, socket } = useSocket()
     const router = useRouter()
     const params = useParams()
-    console.log(isAdmin);
-
-    console.log(canDeleteMessage);
 
     function handleClickMember() {
         if (isMe) {
@@ -111,10 +110,6 @@ export default function ChatItem({
             setError('Failed to Delete Message')
         }
     }
-
-    // useEffect(() => {
-    //     setContent('')
-    // },[content])
 
     useEffect(() => {
         function handleKeyDown(event: any) {

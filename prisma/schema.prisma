@@ -130,18 +130,18 @@ model DirectMessage {
   messageId      String       @id @default(uuid())
   conversationId String
   senderId       String
-  receiverId     String
+  recieverId     String
   fileUrl        String?      @db.Text
   isRead         Boolean      @default(false)
   content        String       @db.Text
   isDeleted      Boolean      @default(false)
   createdAt      DateTime     @default(now())
   sender         Profile      @relation("SentMessages", fields: [senderId], references: [profileId], onDelete: Cascade)
-  receiver       Profile      @relation("ReceivedMessages", fields: [receiverId], references: [profileId], onDelete: Cascade)
+  receiver       Profile      @relation("ReceivedMessages", fields: [recieverId], references: [profileId], onDelete: Cascade)
   conversation   Conversation @relation(fields: [conversationId], references: [conversationId], onDelete: Cascade)
 
   @@index([senderId])
-  @@index([receiverId])
+  @@index([recieverId])
   @@index([conversationId])
 }
 

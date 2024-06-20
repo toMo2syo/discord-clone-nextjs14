@@ -865,14 +865,12 @@ export async function initializeConversation(serverId: string, memberId: string)
     }
 
     const conversation = await fetchConversation(profile.profileId, memberId)
-
     if (!conversation) {
         return redirect(`/server/${serverId}`)
     }
-
     const { initiator, reciever } = conversation
     const other = initiator.profileId === profile.profileId ? reciever : initiator
-    return other
+    return { other, conversationId: conversation.conversationId }
 }
 
 //fetch gorup messages
@@ -907,3 +905,35 @@ export async function fetchGroupMessages({ channelId, limit, cursor }: {
         console.error("[FETCH MESSAGE ERROR]", error)
     }
 }
+
+//fetch one-on-one message
+export async function fetchDirectMessages({ conversationId, limit, cursor }: {
+    conversationId: string,
+    limit: number,
+    cursor?: string | null
+}) {
+    try {
+        const messages = await db.directMessage.findMany({
+            where: {
+                conversationId
+            },
+            take: limit + 1, // Fetch one extra item to check if there is a next page
+            skip: cursor ? 1 : 0,
+            cursor: cursor ? { messageId: cursor } : undefined,
+            include: {
+                sender: true,
+                receiver: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+        const nextCursor = messages.length > limit ? messages.pop()?.messageId : null;
+
+        return { messages, nextCursor };
+    } catch (error) {
+        console.error("[FETCH DIRECT MESSAGE ERROR]", error);
+        return { messages: [], nextCursor: null };
+    }
+}
+

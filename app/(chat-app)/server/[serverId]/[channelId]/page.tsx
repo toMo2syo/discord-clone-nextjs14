@@ -1,5 +1,5 @@
 import Chat from "@/app/components/chat/chat"
-import ChatArea from "@/app/components/chat/chat-area"
+import GroupChatArea from "@/app/components/chat/group-chat-area"
 import ChatHeader from "@/app/components/chat/chat-header"
 import ChatInput from "@/app/components/chat/chat-input"
 import ChatWindow from "@/app/components/chat/chat-window"
@@ -20,7 +20,7 @@ export default async function page({ params }: { params: { serverId: string, cha
         <Chat>
             <ChatHeader type='CHANNEL' channel={channel}></ChatHeader>
             <ChatWindow>
-                <ChatArea type="CHANNEL" channel={channel} currentMember={member!} />
+                <GroupChatArea type="CHANNEL" channel={channel} currentMember={member!} />
                 <ChatInput type='CHANNEL' params={{ serverId, channelId }} placeholder={`Message #${channel.channelName}`} />
             </ChatWindow>
         </Chat>

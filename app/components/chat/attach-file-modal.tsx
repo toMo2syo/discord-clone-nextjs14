@@ -11,7 +11,7 @@ import clsx from "clsx"
 import { useModal } from "@/app/provider/modal-provider"
 import { UploadDropzone } from "@/app/lib/uploadthing"
 import { useSocket } from "@/app/provider/socket-provider"
-import { Image as ImageIcon, FileText, X, } from "lucide-react"
+import { FileText, X, } from "lucide-react"
 import { UploadedFileData } from "uploadthing/types"
 import Image from "next/image"
 
@@ -22,31 +22,52 @@ export default function AttcahFileModal() {
     const [file, setFile] = useState<UploadedFileData | null>(null)
     const { isConnected, socket } = useSocket()
     const { modal, setModal, closeModal, data } = useModal()
+
     const serverId = data?.serverId
     const channelId = data?.channelId
-    console.log(loading);
+    const type = data?.type
+    const conversationId = data?.conversationId
+    const senderId = data?.senderId
+    const recieverId = data?.recieverId
 
     async function handleSendAttachment(e: MouseEvent, file: UploadedFileData | null) {
         e.preventDefault()
         try {
             setLoading(true)
-            console.log(file);
-
             if (isConnected && socket && file !== null) {
-                socket.emit('group message', {
-                    content: file.name,
-                    fileUrl: file.url,
-                    serverId,
-                    channelId
-                }, (response: any) => {
-                    console.log(response);
-
-                    if (response.status !== 'success') {
-                        setError(response.message)
-                    }
-                    setLoading(false)
-                    closeModal()
-                })
+                if (type === 'CHANNEL') {
+                    socket.emit('group message', {
+                        content: file.name,
+                        fileUrl: file.url,
+                        serverId,
+                        channelId
+                    }, (response: any) => {
+                        console.log(response);
+                        if (response.status !== 'success') {
+                            setError(response.message)
+                        }
+                        setLoading(false)
+                        closeModal()
+                    })
+                }
+                if (type === 'CONVERSATION') {
+                    socket.emit('server direct message', {
+                        type,
+                        content: file.name,
+                        fileUrl: file.url,
+                        serverId,
+                        senderId,
+                        recieverId,
+                        conversationId,
+                    }, (response: any) => {
+                        console.log(response);
+                        if (response.status !== 'success') {
+                            setError(response.message)
+                        }
+                        setLoading(false)
+                        closeModal()
+                    })
+                }
             } else {
                 setLoading(false)
                 setError('Please Upload a File')

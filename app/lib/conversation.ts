@@ -19,7 +19,8 @@ export async function findConversaction(initiatorId: string, recieverId: string)
         }
         return {
             initiator: conversation.initiator,
-            reciever: conversation.reciever
+            reciever: conversation.reciever,
+            conversationId: conversation.conversationId
         }
     } catch (error) {
         console.error("Error finding conversation:", error);
@@ -44,7 +45,8 @@ export async function creatreConversation(initiatorId: string, recieverId: strin
         }
         return {
             initiator: conversation.initiator,
-            reciever: conversation.reciever
+            reciever: conversation.reciever,
+            conversationId: conversation.conversationId,
         }
     } catch (error) {
         console.error("Error Creating Conversation:", error);

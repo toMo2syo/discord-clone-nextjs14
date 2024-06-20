@@ -14,18 +14,17 @@ import { useChatScroll } from "@/app/hooks/use-chat-scroll";
 
 type ChatAreaProps = {
     currentMember: { profile: Profile, role: ServerRoleType };
-    name?: string;
     channel: Channel;
     type: "CHANNEL" | "CONVERSATION";
 };
 
-export default function ChatArea({
+export default function GroupChatArea({
     currentMember,
     channel,
     type
 }: ChatAreaProps) {
     const queryKey = `channel:${channel.channelId}`;
-    const channelKey = `chat:${channel.channelId}:messages`;
+    const addKey = `chat:${channel.channelId}:messages`;
     const updateKey = `chat:${channel.channelId}:messages:update`;
 
     const { isConnected } = useSocket();
@@ -39,7 +38,7 @@ export default function ChatArea({
         status
     } = useInfiniteQuery({
         queryKey: [queryKey],
-        queryFn: ({ pageParam = null }: { pageParam?: string | null }) => fetchGroupMessages({ channelId: channel.channelId, limit: 10, cursor: pageParam }),
+        queryFn: ({ pageParam = null }: { pageParam?: string | null }) => fetchGroupMessages({ channelId: channel.channelId!, limit: 10, cursor: pageParam }),
         initialPageParam: null,
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
         refetchInterval: isConnected ? undefined : 1000
@@ -49,7 +48,7 @@ export default function ChatArea({
     const bottomRef = useRef<HTMLDivElement>(null)
     //@ts-ignore
     const count = data?.pages[0].messages.length ?? 0
-    useChatSocket({ channelKey, updateKey, queryKey });
+    useChatSocket({ addKey, updateKey, queryKey });
     useChatScroll({
         chatRef,
         bottomRef,
@@ -60,7 +59,7 @@ export default function ChatArea({
     return (
         <ScrollArea ref={chatRef} className="h-full p-4 pb-20 relative overflow-y-scroll" id="chat-container">
             <div className="flex flex-col items-center gap-2 text-center">
-                <ChatWelcome type={type} name={channel.channelName} timeline={channel.createdAt} />
+                <ChatWelcome type={type} name={channel?.channelName!} timeline={channel?.createdAt!} />
             </div>
             <div className="h-10 flex items-center justify-center">
                 {hasNextPage && !isFetchingNextPage && !isFetching && <ChevronUp onClick={() => fetchNextPage()} width={24} height={24} className="cursor-pointer" />}

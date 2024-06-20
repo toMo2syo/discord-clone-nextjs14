@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 type ChatSocketProps = {
-    channelKey: string;
+    addKey: string;
     updateKey: string;
     queryKey: string;
 };
@@ -12,7 +12,7 @@ type ChatSocketProps = {
 type MessageWithMemberWithProfile = GroupMessage & { member: ServerMembership & { profile: Profile } };
 
 export function useChatSocket({
-    channelKey,
+    addKey,
     updateKey,
     queryKey
 }: ChatSocketProps) {
@@ -23,7 +23,7 @@ export function useChatSocket({
         if (!socket) return;
 
         // Handle new messages
-        socket.on(channelKey, (message: MessageWithMemberWithProfile) => {
+        socket.on(addKey, (message: any) => {
             console.log("New message:", message);
 
             queryClient.setQueryData([queryKey], (oldData: any) => {
@@ -44,7 +44,7 @@ export function useChatSocket({
         });
 
         // Handle message updates (e.g., edits or deletions)
-        socket.on(updateKey, (updatedMessage: MessageWithMemberWithProfile) => {
+        socket.on(updateKey, (updatedMessage: any) => {
             console.log("Updated message:", updatedMessage);
 
             queryClient.setQueryData([queryKey], (oldData: any) => {
@@ -69,8 +69,8 @@ export function useChatSocket({
         });
 
         return () => {
-            socket.off(channelKey);
+            socket.off(addKey);
             socket.off(updateKey);
         };
-    }, [socket, channelKey, updateKey, queryClient, queryKey]);
+    }, [socket, addKey, updateKey, queryClient, queryKey]);
 }

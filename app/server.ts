@@ -13,8 +13,6 @@ const port = 3000;
 // when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
-
-
 app.prepare().then(() => {
     const httpServer = createServer(handler);
 
@@ -66,7 +64,6 @@ app.prepare().then(() => {
 
     io.on("connection", (socket) => {
         console.log('a user connected:', socket.data.userId);
-
 
         //group message
         socket.on('group message', async (data, callback) => {
@@ -239,6 +236,74 @@ app.prepare().then(() => {
             }
         })
 
+        //server direct message
+        socket.on('server direct message', async (data, callback) => {
+            const { type, content, fileUrl = null, conversationId, serverId, senderId, recieverId } = data;
+            console.log(data)
+            if (!conversationId) { return callback({ status: 'error', message: 'Missing conversationId' }) }
+            if (!serverId) { return callback({ status: 'error', message: 'Missing serverId' }) }
+            if (!senderId) { return callback({ status: 'error', message: 'Missing senderId' }) }
+            if (!recieverId) { return callback({ status: 'error', message: 'Missing recieverId' }) }
+
+            try {
+                // Retrieve the server membership for the user
+                const membership = await db.serverMembership.findFirst({
+                    where: {
+                        serverId,
+                        profileId: socket.data.userId
+                    }
+                });
+
+                if (!membership) {
+                    return callback({ status: 'error', message: 'Member Not Found' })
+                }
+
+                const conversation = await db.conversation.findFirst({
+                    where: {
+                        conversationId,
+
+                        OR: [
+                            {
+                                initiatorId: socket.data.userId
+
+                            },
+                            {
+                                recieverId: socket.data.userId
+                            }
+                        ]
+                    }
+                })
+
+                if (!conversation) {
+                    return callback({ status: 'error', message: 'Conversation Not Found' })
+                }
+
+                // Create a new direct message record
+                const directMessage = await db.directMessage.create({
+                    data: {
+                        content,
+                        fileUrl,
+                        conversationId,
+                        senderId,
+                        recieverId
+                    },
+                    include: {
+                        sender: true,
+                        receiver: true
+                    }
+                });
+                const serverConversationKey = `chat:${conversationId}:messages`
+                // Broadcast the message to other connected clients in the server
+                console.log('new Message', directMessage);
+                io.emit(serverConversationKey, directMessage)
+                callback({ status: 'success', message: 'Message sent successfully', directMessage })
+
+            } catch (error) {
+                console.error('Error handling message event:', error);
+                callback({ status: 'error', message: 'Failed to send message' });
+            }
+
+        });
 
         socket.on('disconnect', () => {
             console.log('user disconnected');

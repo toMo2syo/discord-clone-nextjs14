@@ -9,9 +9,12 @@ type ChatInputProps = {
     type: 'CONVERSATION' | 'CHANNEL',
     placeholder?: string,
     params: {
-        serverId: string,
+        serverId?: string,
         channelId?: string,
-        profileId?: string
+        profileId?: string,
+        conversationId?: string,
+        senderId?: string,
+        recieverId?: string,
     }
 }
 
@@ -26,25 +29,52 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
         if (event.key === 'Enter') {
             event.preventDefault()
             setLoading(true)
-            console.log(content)
             if (content.trim().length > 0 && socket && isConnected) {
                 // Emit the content to the server
-                socket.emit('group message', {
-                    type,
-                    content,
-                    serverId: params.serverId,
-                    channelId: params.channelId
-                }, (response: any) => {
-                    console.log(response);
-
-                    if (response.status === 'success') {
+                if (type === 'CHANNEL') {
+                    socket.emit('group message', {
+                        type,
+                        content,
+                        serverId: params.serverId,
+                        channelId: params.channelId
+                    }, (response: any) => {
                         console.log(response);
-                        setContent('')
-                    } else {
-                        setError(response.message)
-                    }
-                    setLoading(false)
-                })
+
+                        if (response.status === 'success') {
+                            console.log(response);
+                            setContent('')
+                            handleFocus()
+                        } else {
+                            setError(response.message)
+                        }
+                        setLoading(false)
+                    })
+                }
+
+                if (type === 'CONVERSATION') {
+                    console.log('conversation chat');
+                    console.log(content);
+
+                    socket.emit('server direct message', {
+                        type,
+                        content,
+                        conversationId: params.conversationId,
+                        serverId: params.serverId,
+                        senderId: params.senderId,
+                        recieverId: params.recieverId
+                    }, (response: any) => {
+                        console.log(response);
+
+                        if (response.status === 'success') {
+                            console.log(response);
+                            setContent('')
+                            handleFocus()
+                        } else {
+                            setError(response.message)
+                        }
+                        setLoading(false)
+                    })
+                }
             } else {
                 setLoading(false)
                 setError('Cannot send an empty message')
@@ -53,7 +83,6 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
     }
 
     const handleFocus = useCallback(() => {
-        console.log('focus');
         chatInptRef?.current?.focus()
     }, [])
 
@@ -69,7 +98,7 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
 
     return (
         <div className="bg-[#ebedef] flex items-center gap-4 dark:bg-[#383a40] w-[77%] h-[44px] px-4 py-[11px] rounded-lg fixed bottom-4">
-            <div onClick={() => openModal('ATTACH_FILE')} className='p-1 cursor-pointer'>
+            <div onClick={() => openModal('ATTACH_FILE', type === 'CONVERSATION' ? { conversationId: params.conversationId, senderId: params.senderId, recieverId: params.recieverId, type: 'CONVERSATION' } : { type: 'CHANNEL' })} className='p-1 cursor-pointer'>
                 <Plus width={20} height={20} className='bg-[#4e5058] text-white dark:bg-[#b5bac1] dark:text-[#383a40] rounded-full' />
             </div>
             <input

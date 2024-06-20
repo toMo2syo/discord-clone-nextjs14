@@ -28,7 +28,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className={cn(
-          "min-h-screen  bg-background font-sans select-none antialiased bg-white dark:bg-[#313338] dark:text-[#c4c9ce]",
+          "min-h-screen min-w-screen overflow-hidden bg-background font-sans select-none antialiased bg-white dark:bg-[#313338] dark:text-[#c4c9ce]",
           fontSans.variable
         )}>
           <ThemeProvider

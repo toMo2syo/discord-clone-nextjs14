@@ -23,19 +23,20 @@ const ModalContext = createContext<ModalState | undefined>(undefined)
 export function ModalProvider({ children }: { children: ReactNode }) {
     const [modal, setModal] = useState<ModalType>('')
     const [data, setData] = useState<any>(null)
+    const [query, setQuery] = useState<any>(null)
     const params = useParams()
 
     const serverId = params?.serverId as string
     const channelId = params?.channelId as string
 
-    function openModal(modal: ModalType) {
+    function openModal(modal: ModalType, query: any) {
         setModal(modal)
-        // setData(data)
+        setQuery(query)
     }
-
     function closeModal() {
         setModal('')
-        setData(null)
+        // setData(null)
+        setQuery(null)
     }
 
     function renderModal() {
@@ -71,11 +72,8 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         async function fetchData() {
-            console.log(serverId);
-
-            if (!serverId) return
+            if (!serverId || !modal) return
             try {
-                console.log(serverId);
                 let fetchedData = null;
                 switch (modal) {
                     case 'INVITE_PEOPLE':
@@ -91,7 +89,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                         break;
                     }
                     case 'ATTACH_FILE': {
-                        fetchedData = { serverId, channelId }
+                        fetchedData = { serverId, channelId, ...query }
                         break
                     }
                     case 'CREATE_SERVER': {
@@ -100,6 +98,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                     default:
                         break;
                 }
+
                 setData(fetchedData);
             } catch (error) {
                 console.error('Failed to fetch data:', error);
@@ -107,14 +106,13 @@ export function ModalProvider({ children }: { children: ReactNode }) {
             }
         }
         fetchData();
-
-        //close the modal when performed action in the modal
         return () => {
             if (modal !== '') {
                 closeModal()
             }
         }
-    }, [modal, serverId, channelId]);
+    }, [modal, serverId, channelId, query]);
+
     return (
         <ModalContext.Provider value={{ modal, data, openModal, closeModal, setModal }}>
             {children}
