@@ -14,7 +14,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     const [isConnected, setIsConnected] = useState<boolean>(false)
 
     useEffect(() => {
-        const socketInstance = io('localhost:3000')
+        const socketInstance = io(`https://${process.env.HOSTNAME}`)
 
         setSocket(socketInstance)
 
