@@ -1,7 +1,7 @@
 import { fetchOnlineFriends } from "@/app/lib/actions"
 import FriendStarter from "./friend-starter"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import Avatar from "../server/avatar"
+import Avatar from "@/app/components/server/avatar"
 import { formatDateTime } from "@/app/lib/formatDateTime"
 import Link from "next/link"
 

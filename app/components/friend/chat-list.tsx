@@ -1,6 +1,6 @@
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import Link from "next/link";
-import Avatar from "../server/avatar";
+import Avatar from "@/app/components/server/avatar";
 import { fetchConversationsWithFriends } from "@/app/lib/actions";
 
 export default async function ChatList() {

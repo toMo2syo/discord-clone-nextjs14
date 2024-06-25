@@ -1,6 +1,6 @@
 "use client"
 import { Profile, ServerRoleType } from "@prisma/client"
-import Avatar from "../avatar"
+import Avatar from "@/app/components/server/avatar"
 import { UserRoundCheck, UserRoundCog } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"

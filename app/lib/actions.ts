@@ -4,7 +4,7 @@ import { CreateChannelFormSchema, CreateFriendRequestSchema, CreateServerformSch
 import { db } from "./db"
 import { cache } from "react"
 import { currentProfile } from './current-profile'
-import { ServerRoleType, Server, Channel, Profile, FriendRequestStatus } from '@prisma/client'
+import { ServerRoleType, Server, Channel, FriendRequestStatus } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { v4 as uuidv4 } from 'uuid';
 import { redirect } from 'next/navigation'

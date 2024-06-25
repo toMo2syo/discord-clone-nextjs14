@@ -3,7 +3,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { Command as CommandIcon, Search as SearchIcon } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
-import Avatar from "./avatar";
+import Avatar from "@/app/components/server/avatar";
 
 type SearchProps = {
     data: {

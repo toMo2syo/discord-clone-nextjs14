@@ -1,6 +1,6 @@
 import { fetchPendingFriendRequests } from "@/app/lib/actions"
 import FriendStarter from "./friend-starter"
-import Avatar from "../server/avatar"
+import Avatar from "@/app/components/server/avatar"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import FriendRequestAction from "./friend-request-action"
 export default async function FriendPendingList() {
