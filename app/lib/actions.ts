@@ -6,7 +6,9 @@ import { cache } from "react"
 import { currentProfile } from './current-profile'
 import { ServerRoleType, Server, Channel, FriendRequestStatus } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+//@ts-ignore
 import { v4 as uuidv4 } from 'uuid';
+
 import { redirect } from 'next/navigation'
 import { auth } from '@clerk/nextjs/server'
 import { fetchConversation } from './conversation'
