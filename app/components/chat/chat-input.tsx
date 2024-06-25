@@ -6,7 +6,7 @@ import clsx from 'clsx'
 import { useModal } from '@/app/provider/modal-provider'
 import EmojiPicker from './emoji-picker'
 type ChatInputProps = {
-    type: 'CONVERSATION' | 'CHANNEL',
+    type: 'SERVER_CONVERSATION' | 'FRIEND_CONVERSATION' | 'CHANNEL',
     placeholder?: string,
     params: {
         serverId?: string,
@@ -38,10 +38,8 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
                         serverId: params.serverId,
                         channelId: params.channelId
                     }, (response: any) => {
-                        console.log(response);
 
                         if (response.status === 'success') {
-                            console.log(response);
                             setContent('')
                             handleFocus()
                         } else {
@@ -51,11 +49,8 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
                     })
                 }
 
-                if (type === 'CONVERSATION') {
-                    console.log('conversation chat');
-                    console.log(content);
-
-                    socket.emit('server direct message', {
+                if (type === 'SERVER_CONVERSATION') {
+                    socket.emit('direct message', {
                         type,
                         content,
                         conversationId: params.conversationId,
@@ -63,10 +58,24 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
                         senderId: params.senderId,
                         recieverId: params.recieverId
                     }, (response: any) => {
-                        console.log(response);
-
                         if (response.status === 'success') {
-                            console.log(response);
+                            setContent('')
+                            handleFocus()
+                        } else {
+                            setError(response.message)
+                        }
+                        setLoading(false)
+                    })
+                }
+                if (type === 'FRIEND_CONVERSATION') {
+                    socket.emit('direct message', {
+                        type,
+                        content,
+                        conversationId: params.conversationId,
+                        senderId: params.senderId,
+                        recieverId: params.recieverId
+                    }, (response: any) => {
+                        if (response.status === 'success') {
                             setContent('')
                             handleFocus()
                         } else {
@@ -97,8 +106,8 @@ export default function ChatInput({ type, placeholder, params }: ChatInputProps)
     }, [content, handleFocus])
 
     return (
-        <div className="bg-[#ebedef] flex items-center gap-4 dark:bg-[#383a40] w-[77%] h-[44px] px-4 py-[11px] rounded-lg fixed bottom-4">
-            <div onClick={() => openModal('ATTACH_FILE', type === 'CONVERSATION' ? { conversationId: params.conversationId, senderId: params.senderId, recieverId: params.recieverId, type: 'CONVERSATION' } : { type: 'CHANNEL' })} className='p-1 cursor-pointer'>
+        <div className="bg-[#ebedef] dark:bg-[#383a40] flex items-center gap-4  w-[93%] md:w-[57%] lg:w-[68%] xl:w-[78%] 2xl-[81%] h-[44px] px-4 py-[11px] rounded-lg fixed bottom-4">
+            <div onClick={() => openModal('ATTACH_FILE', ['SERVER_CONVERSATION', 'FRIEND_CONVERSATION'].includes(type) ? { conversationId: params.conversationId, senderId: params.senderId, recieverId: params.recieverId, type: 'CONVERSATION' } : { type: 'CHANNEL' })} className='p-1 cursor-pointer'>
                 <Plus width={20} height={20} className='bg-[#4e5058] text-white dark:bg-[#b5bac1] dark:text-[#383a40] rounded-full' />
             </div>
             <input

@@ -5,7 +5,7 @@ import { fetchServerMembersById, removeMemberFromServer, updateServerRole } from
 import { Profile, ServerRoleType } from "@prisma/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import Avatar from "./Avatar";
+import Avatar from "./avatar";
 import { Check, EllipsisVertical, Loader2, ShieldQuestion, UserRound, UserRoundCheck, UserRoundCog, UserX } from "lucide-react";
 import { useModal } from "@/app/provider/modal-provider";
 export type ProfileWithRole = {
@@ -26,7 +26,6 @@ export default function ManageMemberModal() {
     const serverId = data?.serverId
 
     async function onRoleChange(memberId: string, role: ServerRoleType) {
-        console.log(role);
         try {
             setLoadingId(memberId)
             await updateServerRole(serverId, memberId, role)
@@ -94,36 +93,26 @@ export default function ManageMemberModal() {
                                 loadingId !== member.profile.profileId && (
                                     <div className="ml-auto">
                                         <DropdownMenu>
-                                            <DropdownMenuTrigger>
-                                                <EllipsisVertical className="w-4 h-4" />
+                                            <DropdownMenuTrigger asChild>
+                                                <EllipsisVertical className="w-4 h-4 cursor-pointer" />
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent side="left">
-                                                <DropdownMenuSub>
-                                                    <DropdownMenuSubTrigger className="flex items-center">
-                                                        <ShieldQuestion className="w-4 h-4 mr-2" />
-                                                        <span>Role</span>
-                                                    </DropdownMenuSubTrigger>
-                                                    <DropdownMenuPortal>
-                                                        <DropdownMenuSubContent>
-                                                            <DropdownMenuItem onSelect={() => onRoleChange(member.profile.profileId, "GUEST")}>
-                                                                <UserRound className="w-4 h-4 mr-2" />
-                                                                <span>Guest</span>
-                                                                {member.role === 'GUEST' &&
-                                                                    <Check className="w-4 h-4 ml-auto" />
-                                                                }
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onSelect={() => onRoleChange(member.profile.profileId, "MODERATOR")}>
-                                                                <UserRoundCheck className="w-4 h-4 mr-2" />
-                                                                <span>Moderator</span>
-                                                                {member.role === 'MODERATOR' &&
-                                                                    <Check className="w-4 h-4 ml-auto" />
-                                                                }
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuSubContent>
-                                                    </DropdownMenuPortal>
-                                                </DropdownMenuSub>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem onSelect={() => onRoleChange(member.profile.profileId, "GUEST")} className="cursor-pointer">
+                                                    <UserRound className="w-4 h-4 mr-2" />
+                                                    <span>Guest</span>
+                                                    {member.role === 'GUEST' &&
+                                                        <Check className="w-4 h-4 ml-1 text-emerald-500" />
+                                                    }
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={() => onRoleChange(member.profile.profileId, "MODERATOR")} className="cursor-pointer">
+                                                    <UserRoundCheck className="w-4 h-4 mr-2" />
+                                                    <span>Moderator</span>
+                                                    {member.role === 'MODERATOR' &&
+                                                        <Check className="w-4 h-4 ml-1 text-emerald-500" />
+                                                    }
+                                                </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem onSelect={() => onKickMember(member.profile.profileId)}>
+                                                <DropdownMenuItem onSelect={() => onKickMember(member.profile.profileId)} className="cursor-pointer">
                                                     <UserX className="w-4 h-4 mr-2" />
                                                     <span>Kick</span>
                                                 </DropdownMenuItem>

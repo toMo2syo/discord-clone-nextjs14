@@ -1,6 +1,6 @@
 import React from 'react';
-import Avatar from '../server/Avatar';
-import { DirectMessage, Profile } from '@prisma/client';
+import Avatar from '../server/avatar';
+import { Profile } from '@prisma/client';
 import Image from 'next/image';
 import pdfIcon from '@/public/pdfIcon.svg'
 import clsx from 'clsx';
@@ -10,13 +10,11 @@ type ChatBubbleProps = {
     isSender: boolean,
     fileUrl: string | null
 }
-const hex = '#9199f3'
 const ChatBubble = ({ content, sender, isSender, fileUrl }: ChatBubbleProps) => {
 
     const fileType = fileUrl?.split('.').pop()
     const isPDF = (fileType === 'pdf' && fileUrl !== null)
     const isImage = (!isPDF && fileUrl !== null)
-    const bubbleCorlor = isSender ? '#0079fb' : '#eaeaec'
     return (
         <div className={clsx('flex items-start mb-10', {
             'justify-end': isSender,
@@ -58,7 +56,7 @@ const ChatBubble = ({ content, sender, isSender, fileUrl }: ChatBubbleProps) => 
             )
             }
             {!fileUrl && (
-                <div className={clsx("inline-block relative w-[300px] h-auto rounded-[30px] after:content-[''] after:absolute after:w-0 after:h-0 after:top-[19px] after:bottom-auto after:border-[12px]", {
+                <div className={clsx("inline-block relative lg:w-[300px] w-[200px] h-auto rounded-[30px] after:content-[''] after:absolute after:w-0 after:h-0 after:top-[19px] after:bottom-auto after:border-[12px]", {
                     "bg-[#eaeaec] text-black after:-left-[18px] after:right-auto after:border-t-[#eaeaec] after:border-r-[#eaeaec] after:border-b-transparent after:border-l-transparent": !isSender,
                     "bg-main text-white after:left-auto after:-right-[18px] after:border-t-main after:border-r-transparent after:border-b-transparent after:border-l-main": isSender,
                 })}>

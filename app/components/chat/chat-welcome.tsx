@@ -21,11 +21,11 @@ export default function ChatWelcome({
                 }
             </p>
             <div className="relative flex items-center w-full mt-4">
-                <div className="flex-grow border-t border-gray-300"></div>
-                <span className="mx-1 bg-white px-2 text-gray-500 dark:bg-gray-800 dark:text-gray-300">
+                <div className="flex-grow border-t border-gray-300 dark:border-gray-500"></div>
+                <span className="mx-1 px-2 text-gray-500 dark:text-gray-300">
                     {formatDateTime(new Date(timeline))}
                 </span>
-                <div className="flex-grow border-t border-gray-300"></div>
+                <div className="flex-grow border-t border-gray-300 dark:border-gray-500"></div>
             </div>
         </div>
     )

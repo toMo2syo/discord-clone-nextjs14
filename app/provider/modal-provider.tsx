@@ -10,8 +10,9 @@ import { useParams } from "next/navigation";
 import { fetchServerById } from "../lib/actions";
 import CreateServerModal from "../components/server/create-server-modal";
 import AttcahFileModal from "../components/chat/attach-file-modal";
+import DeleteFriendModal from "../components/friend/delete-friend-modal";
 
-type ModalType = 'INVITE_PEOPLE' | 'SERVER_SETTING' | 'MANAGE_MEMBER' | 'CREATE_SERVER' | 'DELETE_SERVER' | 'LEAVE_SERVER' | 'CREATE_CHANNEL' | 'ATTACH_FILE' | '';
+type ModalType = 'INVITE_PEOPLE' | 'SERVER_SETTING' | 'MANAGE_MEMBER' | 'CREATE_SERVER' | 'DELETE_SERVER' | 'LEAVE_SERVER' | 'CREATE_CHANNEL' | 'ATTACH_FILE' | 'DELETE_FRIEND' | '';
 type ModalState = {
     modal: ModalType,
     data: any,
@@ -35,10 +36,9 @@ export function ModalProvider({ children }: { children: ReactNode }) {
     }
     function closeModal() {
         setModal('')
-        // setData(null)
-        setQuery(null)
+        setData(null)
+        // setQuery(null)
     }
-
     function renderModal() {
         switch (modal) {
             case 'INVITE_PEOPLE': {
@@ -65,6 +65,9 @@ export function ModalProvider({ children }: { children: ReactNode }) {
             case 'ATTACH_FILE': {
                 return <AttcahFileModal />
             }
+            case 'DELETE_FRIEND': {
+                return <DeleteFriendModal />
+            }
             default:
                 return null
         }
@@ -72,7 +75,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         async function fetchData() {
-            if (!serverId || !modal) return
+            if (!modal) return
             try {
                 let fetchedData = null;
                 switch (modal) {
@@ -93,6 +96,10 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                         break
                     }
                     case 'CREATE_SERVER': {
+                        break
+                    }
+                    case 'DELETE_FRIEND': {
+                        fetchedData = { ...query }
                         break
                     }
                     default:

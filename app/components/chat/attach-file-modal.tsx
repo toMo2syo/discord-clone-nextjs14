@@ -18,8 +18,8 @@ import Image from "next/image"
 export default function AttcahFileModal() {
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState('')
-
     const [file, setFile] = useState<UploadedFileData | null>(null)
+
     const { isConnected, socket } = useSocket()
     const { modal, setModal, closeModal, data } = useModal()
 
@@ -42,7 +42,6 @@ export default function AttcahFileModal() {
                         serverId,
                         channelId
                     }, (response: any) => {
-                        console.log(response);
                         if (response.status !== 'success') {
                             setError(response.message)
                         }
@@ -51,7 +50,7 @@ export default function AttcahFileModal() {
                     })
                 }
                 if (type === 'CONVERSATION') {
-                    socket.emit('server direct message', {
+                    socket.emit('direct message', {
                         type,
                         content: file.name,
                         fileUrl: file.url,
@@ -60,7 +59,22 @@ export default function AttcahFileModal() {
                         recieverId,
                         conversationId,
                     }, (response: any) => {
-                        console.log(response);
+                        if (response.status !== 'success') {
+                            setError(response.message)
+                        }
+                        setLoading(false)
+                        closeModal()
+                    })
+                }
+                if (type === 'FRIEND_CONVERSATION') {
+                    socket.emit('direct message', {
+                        type,
+                        content: file.name,
+                        fileUrl: file.url,
+                        senderId,
+                        recieverId,
+                        conversationId,
+                    }, (response: any) => {
                         if (response.status !== 'success') {
                             setError(response.message)
                         }
@@ -115,12 +129,13 @@ export default function AttcahFileModal() {
                                             className="object-cover rounded-md aspect-square"
                                         />
                                     </a>
-                                    <div
+                                    <button
+                                        disabled={loading}
                                         className="flex items-center cursor-pointer w-[20px] h-[20px] rounded-full justify-center absolute -top-2 -right-2 bg-rose-500"
                                         onClick={() => setFile(null)}
                                     >
                                         <X width={12} height={12} color="#fff" />
-                                    </div>
+                                    </button>
                                 </div>
                             )}
                             {file === null && (

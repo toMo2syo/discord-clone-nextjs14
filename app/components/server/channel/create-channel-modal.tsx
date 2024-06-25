@@ -44,7 +44,7 @@ export default function CreateChannelModal() {
                             </div>
                             <div className="w-full">
                                 <label htmlFor="channelName" className="block mb-2 uppercase text-xs font-semibold">Channel name</label>
-                                <input type="text" placeholder="Enter channel name" min={3} name="channelName" className="bg-[#ebebeb] dark:bg-[#1e1f22] w-full rounded-sm h-[40px] py-[10px] px-2 outline-none placeholder:text-sm" />
+                                <input type="text" autoComplete="off" placeholder="Enter channel name" min={3} name="channelName" className="bg-[#ebebeb] dark:bg-[#1e1f22] w-full rounded-sm h-[40px] py-[10px] px-2 outline-none placeholder:text-sm" />
                             </div>
                             <div className="w-full">
                                 {error?.errors?.name &&

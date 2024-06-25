@@ -15,7 +15,6 @@ export default function FileUpload({
     setServer,
     server
 }: FileUploadProps) {
-    console.log(server.imageUrl);
 
     if (server.imageUrl) {
         return <div className="w-[80px] h-[80px] rounded-full relative">
@@ -43,7 +42,6 @@ export default function FileUpload({
                 ...server,
                 imageUrl: res[0].url
             })
-            console.log(res);
 
         }} />
     )

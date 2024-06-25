@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Profile } from "@prisma/client";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -18,7 +18,6 @@ type ChatAreaProps = {
 };
 
 export default function ConverSationChatArea({
-    other,
     me,
     conversationId
 }: ChatAreaProps) {
@@ -58,7 +57,7 @@ export default function ConverSationChatArea({
     })
 
     return (
-        <ScrollArea ref={chatRef} className="h-full pl-4 pr-8 pb-20 relative overflow-y-scroll" id="chat-container">
+        <ScrollArea ref={chatRef} className="h-full pl-4 pr-8 pb-20 relative overflow-y-scroll">
             <div className="h-10 flex items-center justify-center">
                 {hasNextPage && !isFetchingNextPage && !isFetching && <ChevronUp onClick={() => fetchNextPage()} width={24} height={24} className="cursor-pointer" />}
                 {isFetchingNextPage && <Loader2 width={24} height={24} className="animate-spin stroke-[1px]" />}

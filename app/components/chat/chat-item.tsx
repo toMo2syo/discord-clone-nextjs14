@@ -1,6 +1,6 @@
 'use client'
 import { GroupMessage, Profile, ServerMembership, ServerRoleType } from "@prisma/client"
-import Avatar from "../server/Avatar"
+import Avatar from "../server/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Arrow } from "@radix-ui/react-tooltip"
 import { Edit, Trash2, UserRoundCheck, UserRoundCog } from "lucide-react"
@@ -58,7 +58,6 @@ export default function ChatItem({
 
     async function handleEditMessage(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault()
-        console.log(content);
         try {
             if (content.trim().length > 0 && isConnected) {
                 socket?.emit('update group message', {
@@ -95,7 +94,6 @@ export default function ChatItem({
                     method: 'DELETE'
                 }, (response: any) => {
                     if (response.status === 'success') {
-                        console.log(response);
                         setIsDeleting(false)
 
                         setOpen(false)

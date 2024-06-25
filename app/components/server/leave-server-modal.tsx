@@ -45,14 +45,8 @@ export default function LeaveServerModal() {
 function Submit() {
     const { pending } = useFormStatus();
     return (
-        <div
-            className={
-                clsx("flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm bg-rose-500 text-white text-sm font-semibold hover:bg-rose-500/80", {
-                    "opacity-50": pending
-                })
-            }
-        >
-            <button className="outline-none" disabled={pending}>Leave</button>
-        </div>
+        <button disabled={pending} className={clsx("flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] rounded-sm outline-none bg-rose-500 text-white text-sm font-semibold hover:bg-rose-500/80", {
+            "opacity-50": pending
+        })}>Leave</button>
     )
 }

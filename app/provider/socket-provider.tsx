@@ -12,23 +12,17 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined)
 export function SocketProvider({ children }: { children: ReactNode }) {
     const [socket, setSocket] = useState<Socket | null>(null)
     const [isConnected, setIsConnected] = useState<boolean>(false)
-    console.log(isConnected);
-    console.log(socket);
 
     useEffect(() => {
-        const socketInstance = io('http://localhost:3000')
+        const socketInstance = io(`${process.env.NEXT_PUBLIC_SITE_URL}`)
 
-        // socketRef.current = socketInstance;
-        setSocket(socketInstance) // set socket here will cause a inifite re-render,how to fix it
-        console.log(socketInstance);
+        setSocket(socketInstance)
 
         socketInstance.on('connect', () => {
-            console.log('Connected to socket');
             setIsConnected(true)
         })
 
         socketInstance.on('disconnect', () => {
-            console.log('Disconnected from socket');
             setIsConnected(false)
         })
 

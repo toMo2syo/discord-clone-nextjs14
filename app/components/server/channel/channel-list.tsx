@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Channel, ChannelType } from "@prisma/client";
 import { Arrow } from "@radix-ui/react-tooltip";
 import clsx from "clsx";
-import { Hash, LockKeyhole, PencilLine, Trash2, Video, Volume2 } from "lucide-react";
+import { Hash, LockKeyhole, Mic, PencilLine, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import EditChannelModal from "./edit-channel-modal";
 import { useState } from "react";
@@ -25,8 +25,7 @@ export default function ChannelList({ channel }: { channel: Channel }) {
                     "": !pathname.includes(channel.channelId)
                 })}>
                     {channel.channelType === ChannelType.TEXT && <Hash width={20} height={20} className="group-hover:text-text-bold text-[#6d6f78] dark:text-[#7c7f89]" />}
-                    {channel.channelType === ChannelType.AUDIO && <Volume2 width={20} height={20} className="group-hover:text-text-bold text-[#6d6f78] dark:text-[#7c7f89]" />}
-                    {channel.channelType === ChannelType.VIDEO && <Video width={20} height={20} className="group-hover:text-text-bold text-[#6d6f78] dark:text-[#7c7f89]" />}
+                    {channel.channelType === ChannelType.VOICE && <Mic width={20} height={20} className="group-hover:text-text-bold text-[#6d6f78] dark:text-[#7c7f89]" />}
                     <div className={clsx("text-base group-hover:text-text-bold dark:group-hover:text-white group-hover:font-semibold", {
                         "text-text-bold font-medium dark:text-white": pathname.includes(channel.channelId),
                         "text-text-light font-normal": !pathname.includes(channel.channelId),
@@ -48,7 +47,7 @@ export default function ChannelList({ channel }: { channel: Channel }) {
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="border-none shadow-xl rounded-sm bg-white dark:bg-black z-10">
                                         <Arrow width={11} height={5} className="-mt-[2px] fill-white dark:fill-black" />
-                                        <p className="text-text-bold text-sm">Edit</p>
+                                        <span className="text-text-bold text-sm">Edit</span>
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
@@ -64,7 +63,7 @@ export default function ChannelList({ channel }: { channel: Channel }) {
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="border-none shadow-xl rounded-sm bg-white dark:bg-black z-10">
                                         <Arrow width={11} height={5} className="-mt-[2px] fill-white dark:fill-black" />
-                                        <p className="text-text-bold text-sm">Delete</p>
+                                        <span className="text-text-bold text-sm">Delete</span>
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>

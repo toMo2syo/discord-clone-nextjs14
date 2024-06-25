@@ -1,10 +1,10 @@
 'use server'
 
-import { CreateChannelFormSchema, CreateServerformSchema, ServerformDataType } from './definition'
+import { CreateChannelFormSchema, CreateFriendRequestSchema, CreateServerformSchema, ServerformDataType } from './definition'
 import { db } from "./db"
 import { cache } from "react"
 import { currentProfile } from './current-profile'
-import { ServerRoleType, Server, Channel, GroupMessage } from '@prisma/client'
+import { ServerRoleType, Server, Channel, Profile, FriendRequestStatus } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { v4 as uuidv4 } from 'uuid';
 import { redirect } from 'next/navigation'
@@ -43,33 +43,38 @@ export async function fetchCurrentProfile() {
     return profile
 }
 
-//get the first channel of first created server of current user
+//fetch the first channel of the first server the user is a member of
 export async function fetchDefaultChannel() {
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 1000));
     try {
         const profile = await currentProfile();
         if (!profile) {
-            return null
+            return null;
         }
-        const newestServer = await db.server.findFirst({
+
+        const membership = await db.serverMembership.findFirst({
             where: {
-                ownerId: profile.profileId,
+                profileId: profile.profileId,
             },
             orderBy: {
                 createdAt: 'asc',
             },
             include: {
-                channels: {
-                    orderBy: {
-                        createdAt: 'asc',
+                server: {
+                    include: {
+                        channels: {
+                            orderBy: {
+                                createdAt: 'asc',
+                            },
+                            take: 1,
+                        },
                     },
-                    take: 1,
                 },
             },
         });
 
-        if (newestServer && newestServer.channels.length > 0) {
-            return newestServer
+        if (membership && membership.server && membership.server.channels.length > 0) {
+            return membership.server;
         }
 
         return null; // Return null if there's no server or channel found
@@ -91,6 +96,7 @@ export async function createServer({ servername, imageUrl }: ServerformDataType)
             errors: validatedFields.error.flatten().fieldErrors,
             message: 'Missing Fields.Failed to Create Server'
         }
+
     }
 
     let server: Server | null = null
@@ -102,7 +108,7 @@ export async function createServer({ servername, imageUrl }: ServerformDataType)
                 data: {
                     ownerId: profile.profileId,
                     serverName: servername,
-                    imageUrl: imageUrl,
+                    imageUrl: imageUrl || null,
                     channels: {
                         create: [
                             {
@@ -219,42 +225,6 @@ export async function fetchProfileByServerId(id: string) {
     }
 }
 
-// Fetch profile by server ID
-// export async function fetchProfileByServerId(id: string) {
-//     try {
-//         const profile = await currentProfile();
-//         const server = await db.server.findUnique({
-//             where: {
-//                 serverId: id,
-//             },
-//             include: {
-//                 owner: true,
-//                 memberships: {
-//                     include: {
-//                         profile: true,
-//                     },
-//                 },
-//             },
-//         });
-
-//         if (!server) {
-//             return null;
-//             // throw new Error(`Server with ID ${id} not found`);
-//         }
-
-//         return {
-//             owner: server.owner,
-//             members: server.memberships.map(membership => ({
-//                 profile: membership.profile,
-//                 role: membership.serverRole,
-//             })),
-//         };
-//     } catch (error) {
-//         console.error(error);
-//         throw new Error(`Failed to fetch profile and server owner by id ${id}`);
-//     }
-// }
-
 //get the server role of a specific server for a profile
 export async function fetchRoleByServerId(id: string) {
     try {
@@ -270,10 +240,7 @@ export async function fetchRoleByServerId(id: string) {
                 }
             }
         });
-        if (!role) {
-            return null;
-        }
-        return role.serverRole;
+        return role?.serverRole;
     } catch (error) {
         console.error(error);
         throw new Error(`Failed to fetch server role by ID ${id}`);
@@ -400,6 +367,7 @@ export async function joinServer(inviteCode: string) {
         throw new Error(`Failed to create member`)
     }
 }
+
 
 //get the members (profiles) of a server along with their roles
 export async function fetchServerMembersById(id: string) {
@@ -937,3 +905,405 @@ export async function fetchDirectMessages({ conversationId, limit, cursor }: {
     }
 }
 
+//create friend request
+export type CreateFriendRequestState = {
+    errors?: {
+        email?: string[];
+    };
+    message?: string | null,
+    success?: boolean
+} | null | undefined
+export async function createFriendRequest(prevState: CreateFriendRequestState, formData: FormData) {
+    const rowFormData = {
+        email: formData.get('email')
+    }
+    const safeFormData = CreateFriendRequestSchema.safeParse(rowFormData)
+
+    if (!safeFormData.success) {
+        return {
+            errors: safeFormData.error.flatten().fieldErrors,
+            message: 'Missing Fields.Failed to Create Server',
+            success: safeFormData.success
+        }
+
+    }
+    try {
+        //get the current user(profile)
+        const profile = await currentProfile()
+
+        if (!profile) {
+            return auth().redirectToSignIn()
+        }
+
+        // Check if the receiver exists
+        const reciever = await db.profile.findUnique({
+            where: {
+                email: safeFormData.data.email
+            }
+        })
+
+        if (!reciever) {
+            return {
+                message: 'Receiver does not exist.',
+                success: false
+            }
+        }
+
+        if (profile.profileId === reciever.profileId) {
+            return {
+                message: 'You always be a friend of youself',
+                success: false
+            }
+        }
+
+        //Check if there's already a friend request
+        const existingRequest = await db.friendRequest.findFirst({
+            where: {
+                OR: [
+                    { senderId: profile.profileId, receiverId: reciever.profileId },
+                    { senderId: reciever.profileId, receiverId: profile.profileId },
+                ],
+            },
+        });
+
+        if (existingRequest) {
+            // If a request exists but its status is IGNORED, update it to PENDING
+            if (existingRequest.status === 'IGNORED') {
+                const updatedRequest = await db.friendRequest.update({
+                    where: {
+                        requestId: existingRequest.requestId
+                    },
+                    data: {
+                        status: 'PENDING'
+                    }
+                });
+                return {
+                    message: 'Friend request send sucessfully.',
+                    success: true
+                }
+            } else {
+                return {
+                    message: 'Friend request already exists.',
+                    success: false
+                }
+            }
+        }
+        // Check if the friendProfileId is a friend of the current profile
+        const friendRecord = await db.friend.findFirst({
+            where: {
+                OR: [
+                    { profileId: profile.profileId, friendProfileId: reciever.profileId },
+                    { profileId: reciever.profileId, friendProfileId: profile.profileId }
+                ]
+            }
+        });
+        if (friendRecord) {
+            return {
+                message: 'You are already friends',
+                success: false
+            }
+        }
+        // Create the friend request
+        const newFriendRequest = await db.friendRequest.create({
+            data: {
+                senderId: profile.profileId,
+                receiverId: reciever.profileId,
+                status: FriendRequestStatus.PENDING
+            },
+        });
+        if (newFriendRequest) {
+            return {
+                message: 'Friend request send sucessfully.',
+                success: true
+            }
+        }
+
+    } catch (error) {
+        console.error('Error creating friend request:', error);
+        throw error;
+    }
+}
+
+//fetch pending friend request
+export async function fetchPendingFriendRequests() {
+    try {
+        // Check if the user exists
+        const profile = await currentProfile()
+
+        if (!profile) {
+            return auth().redirectToSignIn()
+        }
+
+        // Fetch pending friend requests where the user is the sender or the receiver
+        const pendingRequests = await db.friendRequest.findMany({
+            where: {
+                receiverId: profile.profileId,
+                status: FriendRequestStatus.PENDING
+            },
+            include: {
+                sender: true,  // Include sender profile details
+            },
+        });
+
+        return pendingRequests;
+    } catch (error) {
+        console.error('Error fetching pending friend requests:', error);
+        throw error;
+    }
+}
+
+//ignore friend request
+export async function ignoreFriendRquest(requestId: string, senderId: string) {
+    if (!requestId || !senderId) {
+        throw new Error('Missing sender ID or request ID')
+    }
+    try {
+        //get the current profile
+        const profile = await currentProfile()
+        if (!profile) {
+            return auth().redirectToSignIn()
+        }
+
+        //Check if there's a pending or accepted friend request
+        const existingRequest = await db.friendRequest.findFirst({
+            where: {
+                OR: [
+                    { senderId: senderId, receiverId: profile.profileId },
+                    { senderId: profile.profileId, receiverId: senderId },
+                ],
+                status: FriendRequestStatus.PENDING,
+            },
+        });
+
+        if (!existingRequest) {
+            throw new Error('Friend Request does not exist')
+        }
+
+        // Update the friend request status to IGNORED
+        await db.friendRequest.update({
+            where: { requestId },
+            data: { status: FriendRequestStatus.IGNORED },
+        });
+    } catch (error) {
+        console.error('Error ignoring friend request:', error);
+        throw error;
+    }
+    revalidatePath('/friend/pending')
+}
+//accept friend request
+export async function acceptFriendRquest(requestId: string, senderId: string) {
+    if (!requestId || !senderId) {
+        throw new Error('Missing sender ID or request ID')
+    }
+    try {
+        //get the current profile
+        const profile = await currentProfile()
+        if (!profile) {
+            return auth().redirectToSignIn()
+        }
+
+        //Check if there's a pending or accepted friend request
+        const existingRequest = await db.friendRequest.findFirst({
+            where: {
+                OR: [
+                    { senderId: senderId, receiverId: profile.profileId },
+                    { senderId: profile.profileId, receiverId: senderId },
+                ],
+                status: FriendRequestStatus.PENDING,
+            },
+        });
+
+        if (!existingRequest) {
+            throw new Error('Friend Request does not exist')
+        }
+
+        // delete the friendRequest
+        await db.friendRequest.delete({
+            where: { requestId },
+        });
+
+        // Create a new friend relationship
+        await db.friend.create({
+            data: {
+                profileId: profile.profileId,
+                friendProfileId: senderId,
+                isBlockedByProfile: false,
+                isBlockedByFriend: false,
+            },
+        });
+    } catch (error) {
+        console.error('Error ignoring friend request:', error);
+        throw error;
+    }
+    revalidatePath('/friend/pending')
+    revalidatePath('/friend/all')
+}
+
+//fetch all friends
+export async function fetchFriends() {
+    try {
+        const profile = await currentProfile()
+        if (!profile) {
+            return auth().redirectToSignIn()
+        }
+        const friends = await db.friend.findMany({
+            where: {
+                OR: [
+                    { profileId: profile.profileId },
+                    { friendProfileId: profile.profileId },
+                ],
+                isBlockedByFriend: false
+            },
+            include: {
+                profile: true,
+                friendProfile: true
+            }
+        })
+        return friends?.map(friend => {
+            if (friend.profileId === profile.profileId) {
+                return friend.friendProfile;
+            } else {
+                return friend.profile;
+            }
+        })
+    } catch (error) {
+        console.error('Error fetching friends:', error);
+        throw error;
+    }
+}
+
+//fetch online friends
+export async function fetchOnlineFriends() {
+    try {
+        const profile = await currentProfile();
+        if (!profile) {
+            return auth().redirectToSignIn();
+        }
+        // Fetch friends where either profileId or friendProfileId matches the current user's profileId
+        const friends = await db.friend.findMany({
+            where: {
+                OR: [
+                    { profileId: profile.profileId },
+                    { friendProfileId: profile.profileId }
+                ],
+                AND: [
+                    {
+                        isBlockedByProfile: false,
+                        isBlockedByFriend: false
+                    }
+                ]
+            },
+            include: {
+                profile: true,
+                friendProfile: true
+            }
+        });
+
+        // Filter friends to only include those who are online
+        const onlineFriends = friends.map(friend => {
+            if (friend.profileId === profile.profileId && friend.friendProfile.status === 'ONLINE') {
+                return friend.friendProfile;
+            }
+            if (friend.friendProfileId === profile.profileId && friend.profile.status === 'ONLINE') {
+                return friend.profile;
+            }
+        }).filter(Boolean); // Filter out undefined values
+
+        return onlineFriends;
+    } catch (error) {
+        console.error('Error fetching online friends:', error);
+        throw error;
+    }
+}
+//delete friend
+export async function deleteFriendById(id: string) {
+    if (!id) {
+        throw new Error('Missing Friend Id')
+    }
+    try {
+        const profile = await currentProfile()
+        if (!profile) {
+            return auth().redirectToSignIn()
+        }
+        // Check if the friendProfileId is a friend of the current profile
+        const friendRecord = await db.friend.findFirst({
+            where: {
+                OR: [
+                    { profileId: profile.profileId, friendProfileId: id },
+                    { profileId: id, friendProfileId: profile.profileId }
+                ]
+            }
+        });
+        if (!friendRecord) {
+            throw new Error("This user is not your friend.");
+        }
+
+        // Delete the friend record
+        await db.friend.delete({
+            where: {
+                friendId: friendRecord.friendId
+            }
+        });
+
+    } catch (error) {
+        console.error('Error deleting friend:', error);
+        throw error;
+    }
+    revalidatePath('/friend/all')
+    revalidatePath('/friend/online')
+}
+
+//initialize friend conversation
+export async function initializeFriendConversation(friendId: string) {
+    if (!friendId) {
+        throw new Error('Missing Friend ID')
+    }
+    //get the current profile
+    const profile = await currentProfile()
+    if (!profile) {
+        return auth().redirectToSignIn()
+    }
+    const conversation = await fetchConversation(profile.profileId, friendId)
+    const { initiator, reciever } = conversation
+    const other = initiator.profileId === profile.profileId ? reciever : initiator
+    return { other, conversationId: conversation.conversationId }
+}
+
+//fetch conversation list
+export async function fetchConversationsWithFriends() {
+    try {
+        const profile = await currentProfile();
+        if (!profile) {
+            return auth().redirectToSignIn();
+        }
+
+        // Fetch conversations where the current profile is either the initiator or the receiver
+        const conversations = await db.conversation.findMany({
+            where: {
+                OR: [
+                    { initiatorId: profile.profileId },
+                    { recieverId: profile.profileId }
+                ]
+            },
+            include: {
+                initiator: true,
+                reciever: true
+            }
+        });
+
+        // Extract the friend's profile from each conversation
+        const friendsProfiles = conversations.map(conversation => {
+            if (conversation.initiatorId === profile.profileId) {
+                return conversation.reciever;
+            }
+            if (conversation.recieverId === profile.profileId) {
+                return conversation.initiator;
+            }
+        });
+
+        return friendsProfiles;
+    } catch (error) {
+        console.error('Error fetching conversations:', error);
+        throw error;
+    }
+}
