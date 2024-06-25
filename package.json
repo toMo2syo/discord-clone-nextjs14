@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node app/server.ts",
+    "postinstall": "prisma generate",
+    "dev": "node --max-old-space-size=4096 -r ts-node/register app/server.ts",
     "build": "next build",
-    "start": "NODE_ENV=production node --max-old-space-size=4096 -r ts-node/register app/server.ts",
+    "start": "prisma generate && NODE_ENV=production ts-node app/server.ts",
     "lint": "next lint"
   },
   "dependencies": {
