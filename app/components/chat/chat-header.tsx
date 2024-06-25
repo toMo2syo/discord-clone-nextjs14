@@ -1,7 +1,7 @@
 'use client'
 import { Channel, ChannelType, Profile } from "@prisma/client"
 import { Hash, Mic } from "lucide-react";
-import Avatar from "../server/avatar";
+import Avatar from "@/app/components/server/avatar";
 import SocketIndicator from "./socket-indicator";
 import ChatVideoButton from "./chat-video-button";
 import { clsx } from "clsx";

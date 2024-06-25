@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { fetchServerMembersById, removeMemberFromServer, updateServerRole } from "@/app/lib/actions";
 import { Profile, ServerRoleType } from "@prisma/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import Avatar from "./avatar";
-import { Check, EllipsisVertical, Loader2, ShieldQuestion, UserRound, UserRoundCheck, UserRoundCog, UserX } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import Avatar from "@/app/components/server/avatar";
+import { Check, EllipsisVertical, Loader2, UserRound, UserRoundCheck, UserRoundCog, UserX } from "lucide-react";
 import { useModal } from "@/app/provider/modal-provider";
 export type ProfileWithRole = {
     profile: Profile,

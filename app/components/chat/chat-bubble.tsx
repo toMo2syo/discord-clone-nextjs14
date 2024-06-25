@@ -1,5 +1,5 @@
 import React from 'react';
-import Avatar from '../server/avatar';
+import Avatar from '@/app/components/server/avatar';
 import { Profile } from '@prisma/client';
 import Image from 'next/image';
 import pdfIcon from '@/public/pdfIcon.svg'

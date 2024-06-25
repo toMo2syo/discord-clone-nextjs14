@@ -1,6 +1,6 @@
 'use client'
 import { GroupMessage, Profile, ServerMembership, ServerRoleType } from "@prisma/client"
-import Avatar from "../server/avatar"
+import Avatar from "@/app/components/server/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Arrow } from "@radix-ui/react-tooltip"
 import { Edit, Trash2, UserRoundCheck, UserRoundCog } from "lucide-react"
