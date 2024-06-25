@@ -14,25 +14,24 @@ enum ProfileStatus {
 }
 
 model Profile {
-  profileId               String              @id @default(uuid())
+  profileId               String             @id @default(uuid())
   name                    String
-  email                   String              @unique
+  email                   String             @unique
   avatarUrl               String?
   introduction            String?
   lastOnlineTime          DateTime?
-  createdAt               DateTime            @default(now())
+  createdAt               DateTime           @default(now())
   status                  ProfileStatus?
   servers                 Server[]
   memberships             ServerMembership[]
-  sentFriendRequests      FriendRequest[]     @relation("SentFriendRequests")
-  receivedFriendRequests  FriendRequest[]     @relation("ReceivedFriendRequests")
-  sentMessages            DirectMessage[]     @relation("SentMessages")
-  receivedMessages        DirectMessage[]     @relation("ReceivedMessages")
-  convsersationsInitiated Conversation[]      @relation("initiator")
-  convsersationsRecieved  Conversation[]      @relation("reciever")
-  friends                 Friend[]            @relation("ProfileFriends")
-  friendOfProfiles        Friend[]            @relation("FriendOfProfiles")
-  MessageReadStatus       MessageReadStatus[]
+  sentFriendRequests      FriendRequest[]    @relation("SentFriendRequests")
+  receivedFriendRequests  FriendRequest[]    @relation("ReceivedFriendRequests")
+  sentMessages            DirectMessage[]    @relation("SentMessages")
+  receivedMessages        DirectMessage[]    @relation("ReceivedMessages")
+  convsersationsInitiated Conversation[]     @relation("initiator")
+  convsersationsRecieved  Conversation[]     @relation("reciever")
+  friends                 Friend[]           @relation("ProfileFriends")
+  friendOfProfiles        Friend[]           @relation("FriendOfProfiles")
 }
 
 model Server {
@@ -52,8 +51,7 @@ model Server {
 
 enum ChannelType {
   TEXT
-  AUDIO
-  VIDEO
+  VOICE
 }
 
 model Channel {
@@ -93,18 +91,17 @@ model ServerMembership {
 }
 
 model GroupMessage {
-  messageId    String              @id @default(uuid())
-  fileUrl      String?             @db.Text
-  content      String              @db.Text
-  isEdited     Boolean             @default(false)
-  isDeleted    Boolean             @default(false)
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  messageId    String           @id @default(uuid())
+  fileUrl      String?          @db.Text
+  content      String           @db.Text
+  isEdited     Boolean          @default(false)
+  isDeleted    Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   channelId    String
   membershipId String
-  channel      Channel             @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
-  member       ServerMembership    @relation(fields: [membershipId], references: [membershipId], onDelete: Cascade)
-  readStatus   MessageReadStatus[]
+  channel      Channel          @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  member       ServerMembership @relation(fields: [membershipId], references: [membershipId], onDelete: Cascade)
 
   @@index([channelId])
   @@index([membershipId])
@@ -145,18 +142,6 @@ model DirectMessage {
   @@index([conversationId])
 }
 
-model MessageReadStatus {
-  id        String       @id @default(uuid())
-  messageId String
-  profileId String
-  isRead    Boolean      @default(false)
-  readAt    DateTime?
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  message   GroupMessage @relation(fields: [messageId], references: [messageId], onDelete: Cascade)
-  profile   Profile      @relation(fields: [profileId], references: [profileId], onDelete: Cascade)
-}
-
 enum FriendRequestStatus {
   PENDING
   IGNORED
@@ -172,6 +157,7 @@ model FriendRequest {
   receiver   Profile             @relation("ReceivedFriendRequests", fields: [receiverId], references: [profileId], onDelete: Cascade)
   status     FriendRequestStatus @default(PENDING)
 
+  @@unique([senderId, receiverId])
   @@index([senderId])
   @@index([receiverId])
 }
@@ -186,6 +172,8 @@ model Friend {
   profile            Profile  @relation("ProfileFriends", fields: [profileId], references: [profileId], onDelete: Cascade)
   friendProfile      Profile  @relation("FriendOfProfiles", fields: [friendProfileId], references: [profileId], onDelete: Cascade)
 
+  @@unique([profileId, friendProfileId])
   @@index([profileId])
   @@index([friendProfileId])
+  @@index([profileId, friendProfileId])
 }
