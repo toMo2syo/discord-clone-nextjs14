@@ -22,7 +22,7 @@ app.prepare().then(() => {
 
     const io = new Server(httpServer, {
         cors: {
-            origin: dev ? "http://localhost:3000" : process.env.NEXT_PUBLIC_SITE_URL,
+            origin: '*',
             methods: ["GET", "POST"]
         }
     });
@@ -346,7 +346,7 @@ app.prepare().then(() => {
             console.error(err);
             process.exit(1);
         })
-        .listen(() => {
+        .listen(port, hostname, () => {
             console.log(`> Ready on https://${hostname}:${port}`);
         });
 });
