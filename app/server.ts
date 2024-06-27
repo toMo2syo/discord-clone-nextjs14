@@ -1,4 +1,3 @@
-//server.ts
 import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
@@ -8,10 +7,10 @@ import { db } from "./lib/db";
 import { ServerRoleType } from "@prisma/client";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
-const port = 3000;
+const hostname = process.env.HOSTNAME || 'localhost';
+const port = parseInt(process.env.PORT || '3000', 10);
 // when using middleware `hostname` and `port` must be provided below
-const app = next({ dev, hostname, port });
+const app = next({ customServer: true, dev, hostname, port });
 const handler = app.getRequestHandler();
 app.prepare().then(() => {
     const httpServer = createServer(handler);
@@ -23,7 +22,7 @@ app.prepare().then(() => {
 
     const io = new Server(httpServer, {
         cors: {
-            origin: "http://localhost:3000", // Update frontend URL in production
+            origin: '*',
             methods: ["GET", "POST"]
         }
     });
@@ -31,14 +30,12 @@ app.prepare().then(() => {
     //auth middleaware
     io.use(async (socket, next) => {
         const cookies = parse(socket.handshake.headers.cookie || '');
-        console.log(cookies);
         const sessionToken = cookies.__session;
 
         //manully check authentication
         if (sessionToken) {
             try {
                 const session = await clerkClient.verifyToken(sessionToken);
-                console.log('session:', session)
                 if (session) {
                     const currentProfile = await db.profile.findUnique({
                         where: {
@@ -49,7 +46,6 @@ app.prepare().then(() => {
                         next(new Error('Unthenticated'))
                     }
                     socket.data.userId = session.sub;
-                    console.log(currentProfile);
                     next();
                 } else {
                     next(new Error('Invalid Session'));
@@ -63,12 +59,22 @@ app.prepare().then(() => {
     })
 
     io.on("connection", (socket) => {
-        console.log('a user connected:', socket.data.userId);
-
+        if (socket.data.userId) {
+            (async () => {
+                await db.profile.update({
+                    where: {
+                        profileId: socket.data.userId,
+                    },
+                    data: {
+                        status: 'ONLINE',
+                        lastOnlineTime: new Date()
+                    }
+                })
+            })()
+        }
         //group message
         socket.on('group message', async (data, callback) => {
-            const { type, content, fileUrl = null, serverId, channelId } = data;
-            console.log(data)
+            const { content, fileUrl = null, serverId, channelId } = data;
             if (!serverId) { return callback({ status: 'error', message: 'Missing serverId' }) }
             if (!channelId) { return callback({ status: 'error', message: 'Missing channelId' }) }
             try {
@@ -102,8 +108,6 @@ app.prepare().then(() => {
                 const channelKey = `chat:${channelId}:messages`
 
                 // Broadcast the message to other connected clients in the server
-                console.log('new Message', groupMessage);
-
                 io.emit(channelKey, groupMessage);
                 callback({ status: 'success', message: 'Message sent successfully', groupMessage })
 
@@ -117,7 +121,6 @@ app.prepare().then(() => {
         //update and delete group message
         socket.on('update group message', async (data, callback) => {
             const { serverId, channelId, messageId, content, method } = data
-            console.log('update group message', { serverId, channelId, messageId, content, method })
             //add backend protection here
             if (!serverId || !channelId || !messageId || !['DELETE', 'PATCH'].includes(method)) {
                 return callback({ status: 'error', message: 'Missing Params or Method Not Allowed' })
@@ -178,9 +181,6 @@ app.prepare().then(() => {
                 const isAdmin = member.serverRole === ServerRoleType.ADMIN
                 const isModerator = member.serverRole === ServerRoleType.MODERATOR
                 const canUpdate = isMessageOwner || isAdmin || isModerator
-                console.log('isMessageOnwer', isMessageOwner);
-                console.log('isAdmin', isAdmin);
-                console.log('isModerator', isModerator);
 
                 if (!canUpdate) {
                     return callback({ status: 'error', message: 'Unauthorized' })
@@ -237,27 +237,44 @@ app.prepare().then(() => {
         })
 
         //server direct message
-        socket.on('server direct message', async (data, callback) => {
-            const { type, content, fileUrl = null, conversationId, serverId, senderId, recieverId } = data;
-            console.log(data)
+        socket.on('direct message', async (data, callback) => {
+            const { type, content, fileUrl, conversationId, serverId, senderId, recieverId } = data;
             if (!conversationId) { return callback({ status: 'error', message: 'Missing conversationId' }) }
-            if (!serverId) { return callback({ status: 'error', message: 'Missing serverId' }) }
+            if (type === 'SERVER_CONVERSATION' && !serverId) {
+                return callback({ status: 'error', message: 'Missing serverId' })
+            }
             if (!senderId) { return callback({ status: 'error', message: 'Missing senderId' }) }
             if (!recieverId) { return callback({ status: 'error', message: 'Missing recieverId' }) }
 
             try {
                 // Retrieve the server membership for the user
-                const membership = await db.serverMembership.findFirst({
-                    where: {
-                        serverId,
-                        profileId: socket.data.userId
-                    }
-                });
+                if (type === 'SERVER_CONVERSATION') {
+                    const membership = await db.serverMembership.findFirst({
+                        where: {
+                            serverId,
+                            profileId: socket.data.userId
+                        }
+                    });
 
-                if (!membership) {
-                    return callback({ status: 'error', message: 'Member Not Found' })
+                    if (!membership) {
+                        return callback({ status: 'error', message: 'Member Not Found' })
+                    }
                 }
 
+                if (type === 'FRIEND_CONVERSATION') {
+                    // Check if the friendProfileId is a friend of the current profile
+                    const friendRecord = await db.friend.findFirst({
+                        where: {
+                            OR: [
+                                { profileId: senderId, friendProfileId: recieverId },
+                                { profileId: recieverId, friendProfileId: senderId }
+                            ]
+                        }
+                    });
+                    if (!friendRecord) {
+                        return callback({ status: 'error', message: 'You Are Not Friends' })
+                    }
+                }
                 const conversation = await db.conversation.findFirst({
                     where: {
                         conversationId,
@@ -282,7 +299,7 @@ app.prepare().then(() => {
                 const directMessage = await db.directMessage.create({
                     data: {
                         content,
-                        fileUrl,
+                        fileUrl: fileUrl ?? null,
                         conversationId,
                         senderId,
                         recieverId
@@ -294,7 +311,6 @@ app.prepare().then(() => {
                 });
                 const serverConversationKey = `chat:${conversationId}:messages`
                 // Broadcast the message to other connected clients in the server
-                console.log('new Message', directMessage);
                 io.emit(serverConversationKey, directMessage)
                 callback({ status: 'success', message: 'Message sent successfully', directMessage })
 
@@ -305,8 +321,21 @@ app.prepare().then(() => {
 
         });
 
+
         socket.on('disconnect', () => {
-            console.log('user disconnected');
+            if (socket.data.userId) {
+                (async () => {
+                    await db.profile.update({
+                        where: {
+                            profileId: socket.data.userId,
+                        },
+                        data: {
+                            status: 'OFFLINE',
+                            lastOnlineTime: new Date()
+                        }
+                    })
+                })()
+            }
         });
 
         // ...
@@ -317,7 +346,7 @@ app.prepare().then(() => {
             console.error(err);
             process.exit(1);
         })
-        .listen(port, () => {
+        .listen(port, hostname, () => {
             console.log(`> Ready on http://${hostname}:${port}`);
         });
 });

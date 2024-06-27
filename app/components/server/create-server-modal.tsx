@@ -25,10 +25,9 @@ export default function CreateServerModal() {
     } | null>(null)
     const [server, setServer] = useState<ServerformDataType>({
         servername: '',
-        imageUrl: ''
     })
 
-    const { modal, setModal, closeModal } = useModal()
+    const { modal, setModal } = useModal()
 
     async function handleCreateServer(e: MouseEvent, server: ServerformDataType) {
         e.preventDefault()
@@ -37,17 +36,15 @@ export default function CreateServerModal() {
             const error = await createServer(server)
             if (error) {
                 setError(error)
-            } else {
-                closeModal()
             }
         } catch (error) {
             console.error(error);
 
         } finally {
             setLoading(false)
-            setError(null)
         }
     }
+
     return (
         <Dialog open={modal === 'CREATE_SERVER'} onOpenChange={open => setModal(open ? 'CREATE_SERVER' : '')}>
             <DialogContent>
@@ -73,7 +70,7 @@ export default function CreateServerModal() {
                             </div>
                             <div className="w-full">
                                 <label htmlFor="servername" className="block mb-2 uppercase text-xs font-semibold">Server name</label>
-                                <input type="text" value={server.servername} onChange={(e) => setServer({
+                                <input type="text" autoComplete="off" value={server.servername} onChange={(e) => setServer({
                                     ...server,
                                     servername: e.target.value
                                 })} placeholder="Enter server name" required min={3} name="servername" className="bg-[#ebebeb] dark:bg-[#1e1f22] w-full rounded-sm h-[40px] py-[10px] px-2 outline-none placeholder:text-sm" />

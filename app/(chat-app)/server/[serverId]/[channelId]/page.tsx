@@ -1,28 +1,20 @@
 import Chat from "@/app/components/chat/chat"
-import GroupChatArea from "@/app/components/chat/group-chat-area"
-import ChatHeader from "@/app/components/chat/chat-header"
-import ChatInput from "@/app/components/chat/chat-input"
-import ChatWindow from "@/app/components/chat/chat-window"
-import { fetchChannelById, fetchFirstMembeById } from "@/app/lib/actions"
-import { notFound } from "next/navigation"
+import { Suspense } from "react"
+import ChannelChatWindowWrapper from "@/app/components/chat/channel-chat-window-wrapper"
+import ChatHeaderWrapper from "@/app/components/chat/chat-header-wrapper"
+import { ChatAreaSkeleton, ChatHeaderSkeleton } from "@/app/components/skeletons"
 
-export default async function page({ params }: { params: { serverId: string, channelId: string } }) {
+export default function page({ params }: { params: { serverId: string, channelId: string } }) {
     const serverId = params.serverId
     const channelId = params.channelId
-    const [channel, member] = await Promise.all([
-        fetchChannelById(channelId),
-        fetchFirstMembeById(serverId)
-    ])
-    if (!channel || !member) {
-        notFound()
-    }
     return (
         <Chat>
-            <ChatHeader type='CHANNEL' channel={channel}></ChatHeader>
-            <ChatWindow>
-                <GroupChatArea type="CHANNEL" channel={channel} currentMember={member!} />
-                <ChatInput type='CHANNEL' params={{ serverId, channelId }} placeholder={`Message #${channel.channelName}`} />
-            </ChatWindow>
+            <Suspense fallback={<ChatHeaderSkeleton type='CHANNEL' />}>
+                <ChatHeaderWrapper type='CHANNEL' channelId={channelId} />
+            </Suspense>
+            <Suspense fallback={<ChatAreaSkeleton />}>
+                <ChannelChatWindowWrapper channelId={channelId} serverId={serverId} />
+            </Suspense>
         </Chat>
     )
 }

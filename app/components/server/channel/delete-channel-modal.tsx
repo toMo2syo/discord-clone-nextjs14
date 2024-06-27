@@ -26,8 +26,8 @@ export default function DeleteChannelModal({
                     <DialogTitle className="text-center">Delete Channel</DialogTitle>
                 </DialogHeader>
                 <DialogDescription className="text-center py-4">
-                    <p>Are you sure you want to delete?</p>
-                    <p>Your channel will be permanently deleted</p>
+                    <span className="block my-2">Are you sure you want to delete?</span>
+                    <span className="block">Your channel will be permanently deleted</span>
                 </DialogDescription>
                 <DialogFooter className="bg-[#f2f3f5] w-full p-2 dark:bg-[#2b2d31]">
                     <form action={dispatch}>

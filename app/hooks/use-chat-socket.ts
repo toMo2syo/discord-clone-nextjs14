@@ -1,4 +1,3 @@
-import { GroupMessage, Profile, ServerMembership } from "@prisma/client";
 import { useSocket } from "../provider/socket-provider";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -8,8 +7,6 @@ type ChatSocketProps = {
     updateKey: string;
     queryKey: string;
 };
-
-type MessageWithMemberWithProfile = GroupMessage & { member: ServerMembership & { profile: Profile } };
 
 export function useChatSocket({
     addKey,
@@ -24,12 +21,10 @@ export function useChatSocket({
 
         // Handle new messages
         socket.on(addKey, (message: any) => {
-            console.log("New message:", message);
 
             queryClient.setQueryData([queryKey], (oldData: any) => {
                 if (!oldData) return;
 
-                // Add the new message to the first page of messages
                 const newPages = [...oldData.pages];
                 newPages[0] = {
                     ...newPages[0],
@@ -45,7 +40,6 @@ export function useChatSocket({
 
         // Handle message updates (e.g., edits or deletions)
         socket.on(updateKey, (updatedMessage: any) => {
-            console.log("Updated message:", updatedMessage);
 
             queryClient.setQueryData([queryKey], (oldData: any) => {
                 if (!oldData) return;

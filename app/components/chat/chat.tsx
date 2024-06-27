@@ -6,8 +6,10 @@ export default function Chat({
     children: ReactNode
 }) {
     return (
-        <div className="w-full h-screen bg-white dark:bg-[#313338]">
-            {children}
+        <div className="flex w-full h-full bg-white dark:bg-[#313338]">
+            <div className="flex-1">
+                {children}
+            </div>
         </div>
     )
 }

@@ -1,37 +1,28 @@
 import ChannelListWrapper from "@/app/components/server/channel/channel-list-wrapper";
 import MemberProfileList from "@/app/components/server/channel/member-profile-list";
+import SearchWrapper from "@/app/components/server/search-wrapper";
 import ServerAsidePanel from "@/app/components/server/server-aside-panel";
-import ServerMenu from "@/app/components/server/server-menu";
-import { fetchChannels, fetchProfileByServerId, fetchRoleByServerId, fetchServerMembersById } from "@/app/lib/actions";
-import { currentProfile } from "@/app/lib/current-profile";
+import ServerMenuWrapper from "@/app/components/server/server-menu-wrapper";
+import { ChannelConversationSearchSkeleton, ChannelTypeListSkeleton, MemberProfileListSkeleton, ServerMenuSkeleton } from "@/app/components/skeletons";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { notFound, redirect } from "next/navigation";
-import { ReactNode } from "react";
-
-export default async function Layout({ params, children }: { params: { serverId: string }, children: ReactNode }) {
-    const userProfile = await currentProfile()
-    if (!userProfile) {
-        return redirect('/server')
-    }
-    const [profile, channels, role, members] = await Promise.all([
-        fetchProfileByServerId(params.serverId),
-        fetchChannels(params.serverId),
-        fetchRoleByServerId(params.serverId),
-        fetchServerMembersById(params.serverId)
-    ])
-
-    if (!profile || !channels || !role || !members) {
-        return notFound()
-    }
-
+import { ReactNode, Suspense } from "react";
+export default function Layout({ params, children }: { params: { serverId: string }, children: ReactNode }) {
     return <>
         <ServerAsidePanel>
-            <ServerMenu profile={profile} role={role} />
-            {(channels.length > 0) && <ScrollArea className="h-[calc(100vh-48px)]">
-                <ChannelListWrapper channels={channels} role={role} />
-                <MemberProfileList members={members} role={role} />
+            <Suspense fallback={<ServerMenuSkeleton />}>
+                <ServerMenuWrapper serverId={params.serverId} />
+            </Suspense>
+            <Suspense fallback={<ChannelConversationSearchSkeleton />}>
+                <SearchWrapper serverId={params.serverId} />
+            </Suspense>
+            <ScrollArea className="h-[calc(100vh-100px)]">
+                <Suspense fallback={<ChannelTypeListSkeleton />}>
+                    <ChannelListWrapper serverId={params.serverId} />
+                </Suspense>
+                <Suspense fallback={<MemberProfileListSkeleton />}>
+                    <MemberProfileList serverId={params.serverId} />
+                </Suspense>
             </ScrollArea>
-            }
         </ServerAsidePanel>
         {children}
     </>

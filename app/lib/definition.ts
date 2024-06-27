@@ -3,7 +3,7 @@ import { z } from "zod"
 
 export const CreateServerformSchema = z.object({
     servername: z.string().min(3, { message: 'Server name must have at least 3 characters' }),
-    imageUrl: z.string().url({ message: 'Server image is required' })
+    imageUrl: z.string().url({ message: 'Server image is required' }).optional()
 })
 export type ServerformDataType = z.infer<typeof CreateServerformSchema>
 
@@ -12,4 +12,8 @@ export const CreateChannelFormSchema = z.object({
         message: 'Channel name must have at least 3 characters'
     }).refine(name => name !== 'general', { message: 'Channel name cannot be general' }),
     type: z.nativeEnum(ChannelType)
+})
+
+export const CreateFriendRequestSchema = z.object({
+    email: z.string().email({ message: 'Invalid email' })
 })

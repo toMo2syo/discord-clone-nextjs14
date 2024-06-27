@@ -1,6 +1,5 @@
 'use client'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { usePathname } from "next/navigation";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import clsx from "clsx";
 import { deleteServer } from "@/app/lib/actions";
 import { useFormState, useFormStatus } from "react-dom";
@@ -19,8 +18,8 @@ export default function DeleteServerModal() {
                     <DialogTitle className="text-center">Delete Server</DialogTitle>
                 </DialogHeader>
                 <DialogDescription className="text-center py-4">
-                    <p>Are you sure you want to delete?</p>
-                    <p>Your server will be permanently deleted</p>
+                    <span className="block my-2">Are you sure you want to delete?</span>
+                    <span className="block">Your server will be permanently deleted</span>
                 </DialogDescription>
                 <DialogFooter className="bg-[#f2f3f5] w-full p-2 dark:bg-[#2b2d31]">
                     <form action={dispatch}>
@@ -48,12 +47,10 @@ export default function DeleteServerModal() {
 function Submit() {
     const { pending } = useFormStatus();
     return (
-        <div>
-            <button className={
-                clsx("flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] outline-none rounded-sm bg-rose-500 text-white text-sm font-semibold hover:bg-rose-500/80", {
-                    "opacity-50": pending
-                })
-            } disabled={pending}>Delete</button>
-        </div>
+        <button className={
+            clsx("flex items-center justify-center w-[96px] h-[38px] py-[2px] px-[16px] outline-none rounded-sm bg-rose-500 text-white text-sm font-semibold hover:bg-rose-500/80", {
+                "opacity-50": pending
+            })
+        } disabled={pending}>Delete</button>
     )
 }

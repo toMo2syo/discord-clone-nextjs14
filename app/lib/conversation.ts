@@ -57,11 +57,9 @@ export async function creatreConversation(initiatorId: string, recieverId: strin
 export async function fetchConversation(initiatorId: string, recieverId: string) {
     try {
         let existingConversation = await findConversaction(initiatorId, recieverId) || await findConversaction(recieverId, initiatorId)
-        console.log('existingConversation', existingConversation);
 
         if (!existingConversation) {
             const newConversation = await creatreConversation(initiatorId, recieverId)
-            console.log('newConversation', newConversation);
 
             return newConversation
         }

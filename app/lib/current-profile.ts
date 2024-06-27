@@ -56,11 +56,11 @@ export async function initialProfile() {
         if (existingProfile) {
             return existingProfile;
         }
-
+        const name = user.firstName === null ? 'Wumpus' : `${user.firstName} ${user.lastName}`
         const newProfile = await db.profile.create({
             data: {
                 profileId: user.id,
-                name: `${user.firstName} ${user.lastName}`,
+                name: name,
                 avatarUrl: user.imageUrl,
                 email: user.emailAddresses[0].emailAddress,
                 lastOnlineTime: new Date()
