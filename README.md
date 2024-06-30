@@ -5,8 +5,8 @@
  - ### 前言
    该项目使用Next.js 14实现仿Discord ，包括群组(Server)、频道、视频通话、群组消息、群组成员之间的发消息和好友功能。为了在Next.js框架中使用Socket.io，我用了Custom Server。虽然这种方法存在一些问题，但对我来说是可以接受的，因为我只是想尝试新的东西，而且不想使用另一个服务器进行实时消息传递。尽管如此，将websocket服务器和Next.js代码分开是比较理想和现实的。
   
-   点击 [**这里**](https://discord-clone-nextjs14-production.up.railway.app) 预览项目(注，不能上传文件和图片，详情见[部署](#部署)部分)
-  - ### 技术堆栈
+   点击 [**这里**](https://discord-clone-nextjs14-production.up.railway.app) 预览项目(注:不能上传文件和图片，详情见[部署](#部署)部分)
+  - ### 技术栈
     - **Next.js 14** 新功能：Server Component,Server Action,Streaming...
     - **Clerk** 用于身份验证。
     - **Shadcn/UI** 和 **TailwindCSS** 用于 UI 和样式。
