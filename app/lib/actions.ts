@@ -1271,7 +1271,7 @@ export async function initializeFriendConversation(friendId: string) {
     return { other, conversationId: conversation.conversationId }
 }
 
-//fetch conversation list
+//fetch friends' conversation
 export async function fetchConversationsWithFriends() {
     try {
         const profile = await currentProfile();
@@ -1279,12 +1279,37 @@ export async function fetchConversationsWithFriends() {
             return auth().redirectToSignIn();
         }
 
+        // Fetch the list of friends for the current profile
+        const friends = await db.friend.findMany({
+            where: {
+                OR: [
+                    { profileId: profile.profileId },
+                    { friendProfileId: profile.profileId }
+                ],
+                AND: [
+                    { isBlockedByProfile: false },
+                    { isBlockedByFriend: false }
+                ]
+            }
+        });
+
+        const friendIds = friends.map(friend => {
+            return friend.profileId === profile.profileId ? friend.friendProfileId : friend.profileId;
+        });
+
         // Fetch conversations where the current profile is either the initiator or the receiver
+        // and the other participant is a friend
         const conversations = await db.conversation.findMany({
             where: {
                 OR: [
-                    { initiatorId: profile.profileId },
-                    { recieverId: profile.profileId }
+                    {
+                        initiatorId: profile.profileId,
+                        recieverId: { in: friendIds }
+                    },
+                    {
+                        recieverId: profile.profileId,
+                        initiatorId: { in: friendIds }
+                    }
                 ]
             },
             include: {

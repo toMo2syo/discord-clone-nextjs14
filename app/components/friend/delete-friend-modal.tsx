@@ -14,7 +14,7 @@ export default function DeleteFriendModal() {
         <Dialog open={modal === 'DELETE_FRIEND'} onOpenChange={open => setModal(open ? 'DELETE_FRIEND' : '')}>
             <DialogContent className="gap-0 px-0 pb-0 dark:bg-[#2b2d31]">
                 <DialogHeader>
-                    <DialogTitle className="text-center">Delete Server</DialogTitle>
+                    <DialogTitle className="text-center">Delete Friend</DialogTitle>
                 </DialogHeader>
                 <DialogDescription className="text-center py-4">
                     <span className="block my-2">Are you sure you want to delete?</span>

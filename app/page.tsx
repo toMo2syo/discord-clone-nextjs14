@@ -6,8 +6,10 @@ export default function Home() {
         <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit">
           Naive Discord Clone with Next.js 14
         </p>
-        <p className="text-center">Add me as a friend in the Discord clone app via</p>
+        <p className="text-center">Add me as a friend</p>
         <p className="text-center select-text mt-2"><b>qingying54@gmail.com</b></p>
+        <p className="text-center mt-4">Join my server</p>
+        <p className="text-center select-text mt-2"><b>https://discord-clone-nextjs14-production.up.railway.app/invite/802f7777-ff53-4f18-b342-1b5c803bb6e6</b></p>
       </div>
       <div className="mb-32 grid text-center">
         <Link
