@@ -9,6 +9,7 @@
    
    密码:qingying11
    
+
    点击 [**这里**](https://discord-clone-nextjs14-production.up.railway.app) 预览项目(注:不能上传文件和图片，详情见[部署](#部署)部分)
   - ### 技术栈
     - **Next.js 14** 使用 React 新特性：Server Component,Server Action,Streaming...
