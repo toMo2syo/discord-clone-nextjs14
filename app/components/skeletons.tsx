@@ -35,7 +35,7 @@ export function ChatListSkeleton() {
         <div className="h-[calc(100%-80px)]">
             <div className="px-[10px] mt-2">
                 {skeletonItems.map((_, index) => (
-                    <div key={index} className="border-b-[1px] last:border-none mb-2 last:mb-0 border-b-[#ccced3] dark:border-b-[#35363c]">
+                    <div key={index} className="border-b-[1px] last:border-none mb-2 pb-2 last:mb-0 border-b-[#ccced3] dark:border-b-[#35363c]">
                         <div className="flex justify-between items-center cursor-pointer p-1 rounded-md px-2">
                             <div className="flex gap-3 items-center cursor-pointer">
                                 <Skeleton className="w-8 h-8 rounded-full bg-[#e3e5e8] dark:bg-[#292524]" />

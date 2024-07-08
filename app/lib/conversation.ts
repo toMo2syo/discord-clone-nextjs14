@@ -4,9 +4,9 @@ export async function findConversaction(initiatorId: string, recieverId: string)
     try {
         const conversation = await db.conversation.findFirst({
             where: {
-                AND: [
-                    { initiatorId },
-                    { recieverId },
+                OR: [
+                    { initiatorId, recieverId },
+                    { initiatorId: recieverId, recieverId: initiatorId }
                 ]
             },
             include: {
@@ -28,7 +28,7 @@ export async function findConversaction(initiatorId: string, recieverId: string)
     }
 }
 
-export async function creatreConversation(initiatorId: string, recieverId: string) {
+export async function createConversation(initiatorId: string, recieverId: string) {
     try {
         const conversation = await db.conversation.create({
             data: {
@@ -56,10 +56,9 @@ export async function creatreConversation(initiatorId: string, recieverId: strin
 
 export async function fetchConversation(initiatorId: string, recieverId: string) {
     try {
-        let existingConversation = await findConversaction(initiatorId, recieverId) || await findConversaction(recieverId, initiatorId)
-
+        let existingConversation = await findConversaction(initiatorId, recieverId)
         if (!existingConversation) {
-            const newConversation = await creatreConversation(initiatorId, recieverId)
+            const newConversation = await createConversation(initiatorId, recieverId)
 
             return newConversation
         }

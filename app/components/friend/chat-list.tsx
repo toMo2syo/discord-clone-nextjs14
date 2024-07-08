@@ -16,7 +16,7 @@ export default async function ChatList() {
             <ScrollBar />
             <div className="px-[10px] mt-2">
                 {friends && friends.map(item => (
-                    <div key={item?.profileId} className="border-b-[1px] last:border-none mb-2 last:mb-0 border-b-[#ccced3] dark:border-b-[#35363c]">
+                    <div key={item?.profileId} className="border-b-[1px] last:border-none mb-2 pb-2 last:mb-0 border-b-[#ccced3] dark:border-b-[#35363c]">
                         <Link href={`/friend/conversation/${item?.profileId}`} className="flex justify-between items-center cursor-pointer p-1 hover:bg-[#d7d9dc] dark:hover:bg-[#404249] rounded-md px-2">
                             <div className="flex gap-3 items-center cursor-pointer">
                                 <Avatar src={item?.avatarUrl} size={32} />
